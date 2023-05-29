@@ -1,4 +1,5 @@
 ﻿using CloudWallet.Models;
+using CloudWallet.Models.Didself;
 using Microsoft.EntityFrameworkCore;
 
 
@@ -13,5 +14,6 @@ namespace CloudWallet.Data
         public DbSet<Publickey> Publickey { get; set; }
         public DbSet<Credential> Credential { get; set; }
         public DbSet<Didself> DidselfDIDs { get; set; }
+        public DbSet<Delegation> Delegations { get; set; }
     }
 }

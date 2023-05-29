@@ -74,7 +74,8 @@ class Handler():
                         code = 301
                         output_header['Location'] = "http://localhost:8002/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
-                    is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, "RP1")
+                    object = req.path.split('/')[-1]
+                    is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
             #*********VP***********
             if ((resource['authorization']['type'] == "vp") ):

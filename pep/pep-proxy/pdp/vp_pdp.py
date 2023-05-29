@@ -6,7 +6,6 @@ class VPPDP:
         try:
             vp_token = request.form.get('vp_token', "")
             state = request.form.get('state', "")
-            print("State:", state, " VP Token:", vp_token)
             decoded_token = jwt.JWS()
             decoded_token.deserialize(vp_token)
             token_payload = json.loads(decoded_token.objects['payload'].decode())

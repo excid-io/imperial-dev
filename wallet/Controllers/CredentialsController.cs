@@ -143,16 +143,44 @@ namespace CloudWallet.Controllers
             return View("AuthorizeConfirmed");
         }
 
-        public async Task<IActionResult> Initialize()
+        public IActionResult Details(int? id)
         {
-            var credential = new Credential();
-            credential.jti = "credential:2";
-            credential.payload = "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJjcnYiOiJQLTI1NiIsImt0eSI6IkVDIiwieCI6InozMFd1eHBzUG93OEtwSDBOOTN2VzI0bkEwSEQ0OF9NbHVxZ2RFVXZ0VTQiLCJ5IjoiVmNLY28xMkJaRlB1NUhVMkxCTG90VEQ5Tml0ZGxOeG5CTG5nRC1lVGFwTSJ9LCJ0eXAiOiJqd3QifQ.eyJhdWQiOiJodHRwczovL2dhdGV3YXkuZXhjaWQuaW8iLCJpc3MiOiJodHRwOi8vdGVzdHNjcmlwdCIsInN1YiI6ImRpZDpzZWxmOnBPNWxsTlBqXy1wWWlVZmdqMDY2ZzZBaTJTMmU4SGkzMl9wU24tZjBpNkEiLCJ2YyI6eyJAY29udGV4dCI6WyJodHRwczovL3d3dy53My5vcmcvMjAxOC9jcmVkZW50aWFscy92MSIsImh0dHBzOi8vZXhjaWQtaW8uZ2l0aHViLmlvL2ltcGVyaWFsL2NvbnRleHRzL3YxIl0sImNyZWRlbnRpYWxTdWJqZWN0Ijp7InJlbGF0aW9uc2hpcHMiOlt7Im9iamVjdCI6ImhvbWUiLCJyZWxhdGlvbiI6InJlYWQifSx7Im9iamVjdCI6ImhvbWUiLCJyZWxhdGlvbiI6IndyaXRlIn1dfSwidHlwZSI6WyJWZXJpZmlhYmxlQ3JlZGVudGlhbCIsIlJlbGF0aW9uc0NyZWRlbnRpYWwiXX19.Ck0IhUyMyKdpT90lC1DIeOuMx8-xFgR4zYxCvDvxAuYBSwP15s5jR4ZQsknbejHog_02Ootw_zzXQrvxQdrSzQ";
-            credential.type = "RelationsCredential";
-            _context.Add(credential);
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Index");
+            string response = string.Empty;
+            //TODO add security check
+            var item = _context.Credential.FirstOrDefault(q => q.Id == id);
+            if (item != null)
+            {
+                response = item.payload;
+            }
+            return Ok(response);
         }
+
+        public IActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var item = _context.Credential.Where(m => m.Id == id).FirstOrDefault();
+            return View(item);
+        }
+
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var item = _context.Credential.Where(m => m.Id == id).FirstOrDefault();
+
+            if (item == null)
+            {
+                return NotFound();
+            }
+            _context.Credential.Remove(item);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
 
         private string CreateJWTProof(int id, string issuer)
         {

@@ -1,5 +1,5 @@
 ﻿using CloudWallet.Data;
-using CloudWallet.Models;
+using CloudWallet.Models.Didself;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -67,10 +67,51 @@ namespace CloudWallet.Controllers
             }
             return Ok(response);
         }
+
+        public IActionResult Delete(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var authorization = _context.DidselfDIDs.Where(m => m.Id == id).FirstOrDefault();
+            return View(authorization);
+        }
+
+
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var resource = _context.DidselfDIDs.Where(m => m.Id == id).FirstOrDefault();
+
+            if (resource == null)
+            {
+                return NotFound();
+            }
+            _context.DidselfDIDs.Remove(resource);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
         public IActionResult Manage(int id)
         {
+            var delegation = _context.Delegations.FirstOrDefault(m => m.DidSelfId == id);
+            @ViewData["DidSelfId"] = id;
+            return View(delegation);
+        }
 
-            return View();
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delegate([Bind("DidSelfId", "AuthType", "AuthClaim", "isEnabled")] Delegation delegation)
+        {
+            if (ModelState.IsValid)
+            {
+                _context.Add(delegation);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            return RedirectToAction(nameof(Manage));
         }
     }
 }
