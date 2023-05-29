@@ -1,0 +1,88 @@
+﻿@model Didself
+
+<h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
+<hr />
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">DIDs</a></li>
+        <li class="breadcrumb-item active">Create</li>
+    </ol>
+</nav>
+<div class="card mt-3" id="Add">
+    <h5 class="card-header">Add new didself DID</h5>
+    <div id="form" class="m-3">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="mb-3 row">
+                <label asp-for="Name" class="col-sm-2 col-form-label">Name</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" asp-for="Name" />
+                </div>
+                <div class="col-sm-6">
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label asp-for="AuthentiationPublicKeyJWK" class="col-sm-2 col-form-label">Authentication Public Key</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" asp-for="AuthentiationPublicKeyJWK" />
+                </div>
+                <div class="col-sm-6">
+                    <span asp-validation-for="AuthentiationPublicKeyJWK" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label asp-for="AuthentiationPrivateKeyJWK" class="col-sm-2 col-form-label">Authentication Private Key</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" asp-for="AuthentiationPrivateKeyJWK" />
+                </div>
+                <div class="col-sm-6">
+                    <span asp-validation-for="AuthentiationPrivateKeyJWK" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label asp-for="IdentifierPublicKeyJWK" class="col-sm-2 col-form-label">Identifier Public Key</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" asp-for="IdentifierPublicKeyJWK" />
+                </div>
+                <div class="col-sm-6">
+                    <span asp-validation-for="IdentifierPublicKeyJWK" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mb-3 row">
+                <label asp-for="IdentifierPrivateKeyJWK" class="col-sm-2 col-form-label">Identifier Private key</label>
+                <div class="col-sm-4">
+                    <input type="text" class="form-control" asp-for="IdentifierPrivateKeyJWK" />
+                </div>
+                <div class="col-sm-6">
+                    <span asp-validation-for="IdentifierPrivateKeyJWK" class="text-danger"></span>
+                </div>
+            </div>
+            <button type="button" class="btn btn-light" onclick="generate()">Generate</button>
+            <input type="submit" class="btn btn-primary" value="Create">
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+       async function generate() {
+            let keyPair = await window.crypto.subtle.generateKey(
+                {
+                    name: "ECDSA",
+                    namedCurve: "P-256"
+                },
+                true,
+                ["sign", "verify"]
+            );
+
+            const exportedPrv = await window.crypto.subtle.exportKey("jwk", keyPair.privateKey);
+            const exportedPub = await window.crypto.subtle.exportKey("jwk", keyPair.publicKey);
+            document.getElementById('AuthentiationPrivateKeyJWK').value = JSON.stringify(exportedPrv, null, " ");
+            document.getElementById('AuthentiationPublicKeyJWK').value = JSON.stringify(exportedPub, null, " ");
+            document.getElementById('IdentifierPrivateKeyJWK').value = JSON.stringify(exportedPrv, null, " ");
+            document.getElementById('IdentifierPublicKeyJWK').value = JSON.stringify(exportedPub, null, " ");
+        }
+    </script>
+}

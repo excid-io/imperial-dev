@@ -1,0 +1,77 @@
+﻿@model IEnumerable<Didself>
+
+<h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
+<hr/>
+<nav aria-label="breadcrumb">
+     <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item active">DIDs</li>
+    </ol>
+</nav>
+<div class="btn-toolbar" role="toolbar" aria-label="...">
+    <a class="btn" asp-action="Create">
+        <img src="~/img/add.svg" alt="Create"><br />Add
+    </a>
+</div>
+<table class="table table-striped panel">
+    <thead>
+        <tr>
+            <th style="width: 70%" scope="col">Identifiers</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>
+                    <a class="btn" onclick="showDetailsModal('@item.Id')">
+                        <img src="~/img/info.svg" alt="details" title="Details" height="25"><br />
+                        <small>Details</small>
+                    </a>
+                    <a class="btn" asp-action="Manage" asp-route-id="@item.Id" class="btn">
+                        <img src="~/img/edit.svg" alt="Manage" title="Manage" height="25"><br />
+                        <small>Manage</small>
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.Id" class="btn">
+                        <img src="~/img/delete.svg" alt="key" title="Delete" height="25"><br />
+                        <small>Delete</small>
+                    </a>
+                </td>
+            </tr>
+        }
+</table>
+
+<div class="modal fade" id="detailsModal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="detailsModalLabel">DID document</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <code><pre id="didDocument"></pre></code>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function showDetailsModal(id) {
+            document.getElementById('didDocument').innerHTML = "";
+            var request = fetch('/Didself/DIDDocument/' + id).then((response) => {
+                response.text().then((data)=>{
+                    document.getElementById('didDocument').innerHTML = data
+                })
+            })
+            const offerModal = new bootstrap.Modal(document.getElementById('detailsModal'), {})
+            offerModal.show();
+        }
+
+    </script>
+}

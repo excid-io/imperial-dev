@@ -1,0 +1,38 @@
+﻿@model IEnumerable<CloudWallet.Models.Profile>
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item active">Profiles</li>
+    </ol>
+</nav>
+<div class="btn-toolbar" role="toolbar" aria-label="...">
+    <a class="btn" asp-action="Create">
+        <img src="~/img/add.svg" alt="Create"><br />Add
+    </a>
+</div>
+<table class="table table-striped panel">
+    <thead>
+        <tr>
+            <th style="width: 70%" scope="col">Profiles</th>
+            <th scope="col">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@Html.DisplayFor(modelItem => item.ProfileName)</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.ID" class="btn">
+                        <img src="img/edit.svg" alt="edit" title="Edit"><br />
+                        <small>Edit</small>
+                    </a>
+                    <a asp-action="Delete" asp-route-id="@item.ID" class="btn">
+                        <img src="img/delete.svg" alt="key" title="Delete"><br />
+                        <small>Delete</small>
+                    </a>
+                </td>
+            </tr>
+        }
+</table>

@@ -1,0 +1,128 @@
+﻿@using iam.Models.RelBAC
+@model Authorization
+@{
+    var relObjects = ViewData["relObjects"] as List<Resource>;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="RelBAC" asp-action="Index">Authorizations</a></li>
+        <li class="breadcrumb-item active">New Authorization</li>
+    </ol>
+</nav>
+<div class="col-md-6">
+    <form asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div id="step1">
+            <h4 class="my-4"><span class="border-bottom"> Basic Information </span></h4>
+            <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: 50%">50%</div>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="control-label mb-1"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="AuthType" class="control-label mb-1"></label>
+                <select asp-for="AuthType" asp-items="@Authorization.AuthTypes" class="form-select">
+                </select>
+                <span asp-validation-for="AuthType" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="AuthClaim" class="control-label mb-1">Client DID</label>
+                <input asp-for="AuthClaim" class="form-control" />
+                <span asp-validation-for="AuthClaim" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <button type="button" class="btn btn-light" onclick="toggleDivs()">Next</button>
+                <a class="btn btn-link" asp-action="Index" role="button">Cancel</a>
+            </div>
+        </div>
+        <div id="step2" style="display:none">
+            <h4 class="my-4"><span class="border-bottom"> Assign Relationships</span></h4>
+            <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: 100%">100%</div>
+            </div>
+            <div class="accordion my-3" id="accordionObjects">
+                @{
+                    int index = 0;
+                    int cindex = 0;
+                }
+                @foreach (var relObject in relObjects!.Where(q=>q.Parent == "")){ 
+                    index++;
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="Obect@(index)">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse@(index)" aria-expanded="true" aria-controls="collapse@(index)">
+                                @relObject.Name
+                            </button>
+                        </h2>
+                        <div id="collapse@(index)" class="accordion-collapse collapse" aria-labelledby="Obect@(index)" data-bs-parent="#accordionObjects">
+                            <div class="accordion-body">
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
+                                    <label class="form-check-label" for="inlineCheckbox1">R</label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                    <label class="form-check-label" for="inlineCheckbox2">W</label>
+                                </div>
+                                <span>@relObject.Name</span>
+                                <br />
+                                    @{
+                                        async Task renderCheckBoxes(Resource relObject,string prefix, int index)
+                                        {
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Read"][index]" value="@relObject.Name">
+                                                <label class="form-check-label" for="inlineCheckbox1">R</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="checkbox"  asp-for="@Model.Relations["Write"][index]"  value="@relObject.Name">
+                                                <label class="form-check-label" for="inlineCheckbox2">W</label>
+                                            </div>
+                                            <span>@Html.Raw(prefix)@relObject.Name</span>
+                                            <br />
+                                        }
+                                    async Task traverseObjects(Resource relObject, string prefix = "⨽")
+                                    {
+                                            foreach (var child in relObjects!.Where(q => q.Parent == relObject.Name))
+                                            {
+                                                await renderCheckBoxes(child, prefix, cindex);
+                                                cindex++;
+                                                await traverseObjects(child, "&nbsp;&nbsp" + prefix);
+                                             }
+                                        }
+                                        await traverseObjects(relObject);
+                                    }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="form-group mb-3">
+                <button type="button" class="btn btn-light" onclick="toggleDivs()">Previous</button>
+                <button type="submit" class="btn btn-primary mx-2">Save</button>
+                <a class="btn btn-link" asp-action="Index" role="button">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        function toggleDivs(){
+            var step1 = document.getElementById("step1");
+            var step2 = document.getElementById("step2");
+            if (step1.style.display === "none") {
+                step1.style.display = "block";
+                step2.style.display = "none";
+            } else {
+                step1.style.display = "none";
+                step2.style.display = "block";
+            }
+        }
+    </script>
+}

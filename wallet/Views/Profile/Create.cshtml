@@ -1,0 +1,48 @@
+﻿@model CloudWallet.Models.Profile
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Profile" asp-action="Index">Profiles</a></li>
+        <li class="breadcrumb-item active">Add</li>
+    </ol>
+</nav>
+<div class="card mt-3" id="Add">
+    <h5 class="card-header">Add new profile</h5>
+    <div class="card-body">
+        <div class="alert alert-warning" role="alert">
+          <h4 class="alert-heading">Warning!</h4>
+          <p>Private keys are stored as passwords by your broswer. After submitting this form allow your broswer to
+              store the generated key, otherwise it will be lost forever.
+          </p>
+        </div>
+        <div id="form" class="mt-3" >
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3 row">
+                    <label asp-for="ProfileName" class="col-sm-2 col-form-label">Profile nickname</label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" asp-for="ProfileName" autocomplete="username" />
+                    </div>
+                    <div class="col-sm-6">
+                        <span asp-validation-for="ProfileName" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label for="PrivateKey" class="col-sm-2 col-form-label" >Private key</label>
+                    <div class="col-sm-2">
+                        <input type="password" class="form-control" asp-for="PrivateKey" autocomplete="new-password" readonly/>
+                        <input type="hidden" class="form-control" asp-for="PublicKeyJWK"/>
+                    </div>
+                    <div class="col-sm-2">
+                        <a class="btn btn-light" onclick="createKey()"> Create key</a>
+                    </div>
+                    <div class="col-sm-6">
+                        <span asp-validation-for="PrivateKey" class="text-danger"></span>
+                    </div>
+                </div>
+                <input type="submit"  class="btn btn-primary" value="Save">
+            </form>
+        </div>
+    </div>
+</div>
