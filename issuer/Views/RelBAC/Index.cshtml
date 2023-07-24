@@ -12,6 +12,7 @@
         <img src="~/img/add.svg" alt="Create"><br />Add
     </a>
 </div>
+
 <table class="table table-striped panel">
     <thead>
         <tr>
@@ -29,7 +30,7 @@
                         <img src="img/info.svg" alt="details" title="Details" height="25"><br />
                         <small>Details</small>
                     </a>
-                    <a class="btn" onclick="showOfferModal('@item.Code')">
+                    <a class="btn" onclick="showOfferModal('@item.Id')">
                         <img src="img/share.svg" alt="offer" title="Offer" height="25"><br />
                         <small>Offer</small>
                     </a>
@@ -46,13 +47,15 @@
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h1 class="modal-title fs-5" id="offerModalLabel">Pre-authorized code</h1>
+            <h1 class="modal-title fs-5" id="offerModalLabel">Credential Offer</h1>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
             <div class="input-group mb-3">
                 <input id="credentialOffer" class="form-control" type="text" value="" aria-label="" disabled readonly>
-                <img src="img/copy.svg" alt="copy" title="copy" class="btn btn-outline-secondary">
+                <a id="credentialOfferHref" href="" target="_blank" class="btn btn-outline-secondary">
+                <img src="img/open.svg" alt="open in new tab" title="open in new tab" >
+                </a>
             </div>
           </div>
           <div class="modal-footer">
@@ -82,8 +85,10 @@
 @section Scripts {
     <script>
         function showOfferModal(code) {
-            document.getElementById('credentialOffer').value = code;
-            document.getElementById('credentialOffer').aria = code;
+            const walletURL = "http://localhost:8002/Credentials/Offer?credential_offer_uri=" + encodeURIComponent("http://localhost:8001/Offer/Index/" + code);
+            document.getElementById('credentialOffer').value = walletURL;
+            document.getElementById('credentialOffer').aria = walletURL;
+            document.getElementById('credentialOfferHref').href = walletURL;
             const offerModal = new bootstrap.Modal(document.getElementById('offerModal'), {})
             offerModal.show();
         }

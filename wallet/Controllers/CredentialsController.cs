@@ -86,6 +86,23 @@ namespace CloudWallet.Controllers
 
         }
 
+        public async Task<IActionResult> Offer(string credential_offer_uri)
+        {
+            var httpResponse = await httpClient.GetAsync(credential_offer_uri);
+            var credentialOffer = await httpResponse.Content.ReadFromJsonAsync<CredentialOffer>();
+            if(credentialOffer == null)
+            {
+                return NotFound();
+            }
+            System.Diagnostics.Debug.WriteLine("Received:" + credentialOffer.CredentialIssuer);
+            ViewData["DIDs"] = _context.DidselfDIDs.ToList();
+            ViewData["preAuthorizedCode"] = credentialOffer.Grants.PreAuthorizedCode.Code;
+            ViewData["issuerURL"] = credentialOffer.CredentialIssuer;
+            return View();
+        }
+
+        
+
         public IActionResult Authorize(AuthorizationRequest request)
         {
             ViewData["ClientName"] = "Unknown client";

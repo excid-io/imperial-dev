@@ -73,6 +73,7 @@ namespace iam.Controllers
                 {
                     "credentialSubject", new Dictionary<String, Object>()
                     {
+                        {"id", did},
                         {"relationships",relationships!}
                     }
             }
