@@ -63,7 +63,7 @@ class Issuer:
                 "credentialStatus":{
                     "type": "RevocationList2021Status",
                     "statusListIndex": "10",
-                    "statusListCredential": "http://localhost:8001/credential/teststatus"
+                    "statusListCredential": "https://dev-issuer.excid.io/credential/teststatus"
                 }
             }
         }
@@ -94,7 +94,7 @@ class Issuer:
                 "credentialStatus":{
                     "type": "RevocationList2021Status",
                     "statusListIndex": "9",
-                    "statusListCredential": "http://localhost:8001/credential/teststatus"
+                    "statusListCredential": "https://dev-issuer.excid.io/credential/teststatus"
                 }
             }
         }

@@ -22,70 +22,84 @@ def create_store(fga_client_instance):
 
 def create_authz_model(fga_client_instance):
     model = {
-        "schema_version": "1.1",
         "type_definitions": [
-            {"type": "user"},
             {
-                "type": "resource",
+            "type": "employee",
+            "relations": {}
+            },
+            {
+            "type": "company",
+            "relations": {
+                "authorized": {
+                "this": {}
+                }
+            },
+            "metadata": {
                 "relations": {
-                        "reader": {
-                            "union": {
-                                "child": [
-                                     {
-                                         "this": {}
-                                     },
-                                    {
-                                         "tupleToUserset": {
-                                             "tupleset": {
-                                                 "relation": "parent"
-                                             },
-                                             "computedUserset": {
-                                                 "relation": "reader"
-                                             }
-                                         }
-                                     }
-                                ]
-                            }
-                        },
-                    "writer": {
-                            "union": {
-                                "child": [
-                                    {
-                                        "this": {}
-                                    },
-                                    {
-                                        "tupleToUserset": {
-                                            "tupleset": {
-                                                "relation": "parent"
-                                            },
-                                            "computedUserset": {
-                                                "relation": "writer"
-                                            }
-                                        }
-                                    }
-                                ]
-                            }
-                    },
-                    "parent": {
-                            "this": {}
+                "authorized": {
+                    "directly_related_user_types": [
+                    {
+                        "type": "employee"
                     }
-                },
-                "metadata": {
-                    "relations": {
-                        "reader": {
-                            "directly_related_user_types": [{"type": "user"}]
-                        },
-                        "writer": {
-                            "directly_related_user_types": [{"type": "user"}]
-                        },
-                        "parent": {
-                            "directly_related_user_types": [{"type": "resource"}]
-                        }
-                    }
+                    ]
+                }
                 }
             }
-        ]
-    }
+            },
+            {
+            "type": "resource",
+            "relations": {
+                "parent": {
+                "this": {}
+                },
+                "access": {
+                "union": {
+                    "child": [
+                    {
+                        "this": {}
+                    },
+                    {
+                        "tupleToUserset": {
+                        "tupleset": {
+                            "object": "",
+                            "relation": "parent"
+                        },
+                        "computedUserset": {
+                            "object": "",
+                            "relation": "access"
+                        }
+                        }
+                    }
+                    ]
+                }
+                }
+            },
+            "metadata": {
+                "relations": {
+                "parent": {
+                    "directly_related_user_types": [
+                    {
+                        "type": "resource"
+                    }
+                    ]
+                },
+                "access": {
+                    "directly_related_user_types": [
+                    {
+                        "type": "company"
+                    },
+                    {
+                        "type": "company",
+                        "relation": "authorized"
+                    }
+                    ]
+                }
+                }
+            }
+            }
+        ],
+        "schema_version": "1.1"
+        }
     api_response = asyncio.get_event_loop().run_until_complete(
         fga_client_instance.write_authorization_model(model))
     return api_response
@@ -127,34 +141,24 @@ def create_objects(fga_client_instance):
     body = ClientWriteRequest(
         writes=[
             ClientTuple(
-                user="resource:SmartHome1",
+                user="resource:SmartRoad1",
                 relation="parent",
                 object="resource:Address1",
             ),
             ClientTuple(
-                user="resource:SmartHome1",
+                user="resource:SmartRoad1",
                 relation="parent",
-                object="resource:Plug1",
+                object="resource:Camera1",
             ),
             ClientTuple(
-                user="resource:Plug1",
+                user="resource:Camera1",
                 relation="parent",
-                object="resource:Power1",
+                object="resource:Status1",
             ),
             ClientTuple(
-                user="resource:SmartHome1",
+                user="resource:Camera1",
                 relation="parent",
-                object="resource:RP1",
-            ),
-            ClientTuple(
-                user="resource:RP1",
-                relation="parent",
-                object="resource:Sensor1",
-            ),
-            ClientTuple(
-                user="resource:Sensor1",
-                relation="parent",
-                object="resource:Temperature1",
+                object="resource:Firmware1",
             ),
         ]
     )
