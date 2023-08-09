@@ -167,7 +167,7 @@ def create_objects(fga_client_instance):
 
 configuration = openfga_sdk.Configuration(
     api_scheme="http",
-    api_host="localhost:8080",
+    api_host="localhost:5004",
 )
 
 # Create an instance of the API class
