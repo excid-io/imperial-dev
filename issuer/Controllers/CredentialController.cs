@@ -3,18 +3,11 @@ using iam.Data;
 using iam.Models.Oidc4vci;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
-using System.Collections.Specialized;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json.Nodes;
-using System.Text.Json;
-using System.Text;
-using iam.Models.RelBAC;
-using System.Security.Cryptography;
+
 
 namespace iam.Controllers
 {
@@ -57,6 +50,79 @@ namespace iam.Controllers
                 }
             }
             return NotFound();
+        }
+
+        public IActionResult Status()
+        {
+            byte[] bytes = new byte[2000]; //It holds 16K VCs. This the the mimimum size according to https://w3c-ccg.github.io/vc-status-list-2021/#revocationlist2021status
+            var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+            List<int> indexes = _context.Authorizations.Where(q => q.Revoked == true).Select(q => q.Id).ToList();
+            foreach (int bitindex in indexes)
+            {
+                int _bitindex = bitindex % 16000;
+                int index = _bitindex / 8;
+                int bit = _bitindex % 8;
+                byte mask = (byte)(1 << bit);
+                bytes[index] |= mask;
+            }
+            var s = Convert.ToBase64String(bytes);
+            /*
+             * Created and sign the revocation list
+             */
+            var response = createRevocationList(s);
+            return Ok(response);
+        }
+
+        public IActionResult TestStatus()
+        {
+            /*
+             * Still in progress
+             * It generates a revocation list with the
+             * 9th VC revoked
+             */
+
+            byte[] bytes = new byte[2000]; //It holds 16K VCs. This the the mimimum size according to https://w3c-ccg.github.io/vc-status-list-2021/#revocationlist2021status
+            int bitindex = 9; //VC with index 9 is revoked. Note the first index is 0
+            int index = bitindex / 8;
+            int bit = bitindex % 8;
+            byte mask = (byte)(1 << bit);
+            bytes[1] |= mask;
+            var s = Convert.ToBase64String(bytes);
+            /*
+             * Created and sign the revocation list
+             */
+            var response = createRevocationList(s);
+            return Ok(response);
+        }
+
+        private string createRevocationList(String bitstring64)
+        {
+
+            var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
+            var iss = _configuration["iss_url"];
+            var vc = new Dictionary<String, Object>()
+            {
+                {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://w3id.org/vc/status-list/v1"}},
+                {"type", new String[]{ "VerifiableCredential", "StatusList2021Credential" } },
+                {
+                    "credentialSubject", new Dictionary<String, Object>()
+                    {
+                        {"type","RevocationList2021" },
+                        {"encodedList",bitstring64} //FIX that, it must be GZIPed
+                    }
+                }
+
+            };
+            var payload = new JwtPayload(iss, null, new List<Claim>(), null, null)
+                {
+                    { "iat", iat },
+                    { "exp", exp },
+                    { "vc", vc }
+            };
+
+            return JWTSignedCredential(payload);
+
         }
 
         private string JWTSignedCredential(JwtPayload credential)
