@@ -18,10 +18,17 @@ namespace CloudWallet.Controllers
     public class CredentialsController : Controller
     {
         private readonly WalletDBContext _context;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<CredentialsController> _logger;
+		private string currentUser
+		{
+			get
+            {
+                return HttpContext.User.FindFirstValue(ClaimTypes.Name);
+            } 
+        }
         private static readonly HttpClient httpClient = new HttpClient();
 
-        public CredentialsController(ILogger<HomeController> logger, WalletDBContext context)
+        public CredentialsController(ILogger<CredentialsController> logger, WalletDBContext context)
         {
             _logger = logger;
             _context = context;
@@ -29,7 +36,7 @@ namespace CloudWallet.Controllers
 
         public IActionResult Index()
         {
-            var credentials = _context.Credential.ToList();
+            var credentials = _context.Credential.Where(q=>q.Owner==currentUser).ToList();
             return View(credentials);
         }
 
@@ -41,21 +48,18 @@ namespace CloudWallet.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string preAuthorizedCode, string issuerURL, int did)
+        public async Task<IActionResult> Create(string preAuthorizedCode, string issuerURL, string credentialType, int did)
         {
             var tokenRequest= new FormUrlEncodedContent(new[]
                {
                     new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:pre-authorized_code"),
                     new KeyValuePair<string, string>("pre-authorized_code", preAuthorizedCode),
                 });
-            System.Diagnostics.Debug.WriteLine("Ready to post:" + preAuthorizedCode + " to " + issuerURL);
             var tokenResponse = await httpClient.PostAsync(issuerURL+"/token", tokenRequest);
             string content = await tokenResponse.Content.ReadAsStringAsync();
-            System.Diagnostics.Debug.WriteLine("Received:" + content);
             if (content != "")
             {
                 var proof = CreateJWTProof(did, issuerURL);
-                System.Diagnostics.Debug.WriteLine("JWT Proof:" + proof);
                 var credRequest = new CredentialRequest
                 {
                     format = "jwt_vc_json",
@@ -73,11 +77,12 @@ namespace CloudWallet.Controllers
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var decodedCredential = tokenHandler.ReadJwtToken(credential);
                     var item = new Credential();
-                    item.type = "RelationsCredential";
+                    item.type = credentialType;
                     item.iss = decodedCredential.Payload["iss"].ToString()!;
                     item.jti = decodedCredential.Payload["jti"].ToString()!;
                     item.b64credential = credential;
                     item.payload = decodedCredential.Payload["vc"].ToString()!;
+                    item.Owner = currentUser;
                     _context.Add(item);
                     await _context.SaveChangesAsync();
                 }
@@ -88,6 +93,7 @@ namespace CloudWallet.Controllers
 
         public async Task<IActionResult> Offer(string credential_offer_uri)
         {
+            System.Diagnostics.Debug.WriteLine("Connecting to:" + credential_offer_uri);
             var httpResponse = await httpClient.GetAsync(credential_offer_uri);
             var credentialOffer = await httpResponse.Content.ReadFromJsonAsync<CredentialOffer>();
             if(credentialOffer == null)
@@ -95,9 +101,10 @@ namespace CloudWallet.Controllers
                 return NotFound();
             }
             System.Diagnostics.Debug.WriteLine("Received:" + credentialOffer.CredentialIssuer);
-            ViewData["DIDs"] = _context.DidselfDIDs.ToList();
+            ViewData["DIDs"] = _context.DidselfDIDs.Where(q=>q.Owner == currentUser).ToList();
             ViewData["preAuthorizedCode"] = credentialOffer.Grants.PreAuthorizedCode.Code;
-            ViewData["issuerURL"] = credentialOffer.CredentialIssuer;
+            ViewData["credentialType"] = credentialOffer.Credentials.First().Types[1];
+			ViewData["issuerURL"] = credentialOffer.CredentialIssuer;
             return View();
         }
 
@@ -198,7 +205,7 @@ namespace CloudWallet.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        
         private string CreateJWTProof(int id, string issuer)
         {
             var did = _context.DidselfDIDs.FirstOrDefault(q => q.Id == id);

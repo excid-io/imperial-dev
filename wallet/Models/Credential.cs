@@ -16,6 +16,7 @@ namespace CloudWallet.Models
         public string payload { get; set; } = "";
         public string iss { get; set; } = "";
         public string b64credential { get; set; } = "";
+        public string Owner { get; set; } = string.Empty;
 
         /*
         [DefaultValue(false)]

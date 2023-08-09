@@ -19,5 +19,6 @@ namespace CloudWallet.Models.Didself
         public string AuthentiationPrivateKeyJWK { get; set; } = string.Empty;
         public string IdentifierPublicKeyJWK { get; set; } = string.Empty;
         public string IdentifierPrivateKeyJWK { get; set; } = string.Empty;
-    }
+		public string Owner { get; set; } = string.Empty;
+	}
 }

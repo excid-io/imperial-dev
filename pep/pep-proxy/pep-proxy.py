@@ -1,6 +1,6 @@
 from werkzeug.wrappers       import Request, Response
 from werkzeug.routing        import Map, Rule
-from pdp.token_pdp           import TokenPDP
+#from pdp.token_pdp           import TokenPDP
 from pdp.vp_pdp              import VPPDP
 from proxy.http_proxy        import HTTPProxy
 from urllib.parse import urlencode
@@ -24,8 +24,8 @@ class Handler():
         for key in self.conf['resources']:
             if key == "default": continue
             self.url_map.add(rulefactory=Rule(key, endpoint=key))
-        self.vp_pdp = VPPDP()
-        self.token_pdp = TokenPDP()
+        self.vp_pdp = VPPDP(True)
+        #self.token_pdp = TokenPDP()
         self.http_proxy = HTTPProxy()
 
     def wsgi_app(self, environ, start_response):
@@ -70,19 +70,25 @@ class Handler():
                                 "client_name":"Demo verifier"
                             })
                         }
-                        self.token_pdp.append_authorization_table(query_parameter['state'], {'active':'false', 'exp':''})
+                        #self.token_pdp.append_authorization_table(query_parameter['state'], {'active':'false', 'exp':''})
                         code = 301
                         output_header['Location'] = "http://localhost:8002/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
                     object = req.path.split('/')[-1]
-                    is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
+                    #is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
             #*********VP***********
             if ((resource['authorization']['type'] == "vp") ):
-                is_client_authorized, ver_output = self.vp_pdp.decide(configuration=resource['authorization'], request=req)
+                is_client_authorized, ver_output = self.vp_pdp.decide(request=req)
                 if(is_client_authorized):
-                   self.token_pdp.authorization_table[ver_output["state"]]={"user":ver_output["user"], "relations":ver_output["relations"]}
-                   print(self.token_pdp.authorization_table) 
+                    #token_payload = json.loads(decoded_token.objects['payload'].decode())
+                    #relations = token_payload["vc"]["credentialSubject"]["relationships"]
+                    #user = token_payload["sub"]
+                    state = ver_output["state"]
+                    vcs = ver_output["vcs"]
+                    #self.token_pdp.authorization_table[ver_output["state"]]={"user":ver_output["user"], "relations":ver_output["relations"]}
+                    #print(self.token_pdp.authorization_table)
+                    print("authorized for state",state, "with vcs:", vcs) 
 
             elif('authorization' not in resource):
                 is_client_authorized = True

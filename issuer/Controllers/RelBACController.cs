@@ -1,7 +1,7 @@
 ﻿using iam.Data;
 using iam.Models.RelBAC;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text.Json;
 
@@ -36,7 +36,7 @@ namespace iam.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name", "AuthType", "Relations")] Authorization authorization)
+        public async Task<IActionResult> Create([Bind("Name", "AuthType", "Relations")] Models.RelBAC.Authorization authorization)
         {
             List<Dictionary<string, string>> relations = new List <Dictionary<string, string>>();
             foreach (var relation in authorization.Relations["Read"])
@@ -78,6 +78,32 @@ namespace iam.Controllers
                 return NotFound();
             }
             _context.Authorizations.Remove(resource);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
+        }
+
+        public IActionResult Status(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var authorization = _context.Authorizations.Where(m => m.Id == id).FirstOrDefault();
+            return View(authorization);
+        }
+
+
+        [HttpPost, ActionName("Status")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> StatusConfirmed(int id)
+        {
+            var resource = _context.Authorizations.Where(m => m.Id == id).FirstOrDefault();
+
+            if (resource == null)
+            {
+                return NotFound();
+            }
+            resource.Revoked = !resource.Revoked;
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }

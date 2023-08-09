@@ -16,7 +16,8 @@
 <table class="table table-striped panel">
     <thead>
         <tr>
-            <th style="width: 70%" scope="col">Authorizations</th>
+            <th style="width: 50%" scope="col">Authorizations</th>
+            <th style="width: 10%" scope="col">Status</th>
             <th scope="col">Actions</th>
         </tr>
     </thead>
@@ -25,8 +26,9 @@
         {
             <tr>
                 <td>@Html.DisplayFor(modelItem => item.Name)</td>
+                <td>@Html.Raw(item.Revoked?"Revoked":"Active")</td>
                 <td>
-                    <a class="btn" onclick="showDetailsModal('@item.Id')" ">
+                    <a class="btn" onclick="showDetailsModal('@item.Id')">
                         <img src="img/info.svg" alt="details" title="Details" height="25"><br />
                         <small>Details</small>
                     </a>
@@ -37,6 +39,10 @@
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn">
                         <img src="img/delete.svg" alt="key" title="Delete" height="25"><br />
                         <small>Delete</small>
+                    </a>
+                    <a asp-action="Status" asp-route-id="@item.Id" class="btn">
+                        <img src="img/change.svg" alt="key" title="Change Status" height="25"><br />
+                        <small>@Html.Raw(item.Revoked?"Activate":"Revoke")</small>
                     </a>
                 </td>
             </tr>

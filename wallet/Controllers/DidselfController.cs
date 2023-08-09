@@ -3,6 +3,7 @@ using CloudWallet.Models.Didself;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 using System.Text;
 
 namespace CloudWallet.Controllers
@@ -10,17 +11,23 @@ namespace CloudWallet.Controllers
     public class DidselfController : Controller
     {
         private readonly WalletDBContext _context;
+        private readonly ILogger<DidselfController> _logger;
+		private string currentUser
+		{
+			get
+			{
+				return HttpContext.User.FindFirstValue(ClaimTypes.Name);
+			}
+		}
 
-        private readonly ILogger<HomeController> _logger;
-
-        public DidselfController(ILogger<HomeController> logger, WalletDBContext context)
+		public DidselfController(ILogger<DidselfController> logger, WalletDBContext context)
         {
             _logger = logger;
             _context = context;
         }
         public async Task<IActionResult> Index()
         {
-            return View(await _context.DidselfDIDs.ToListAsync());
+            return View(await _context.DidselfDIDs.Where(q=>q.Owner==currentUser).ToListAsync());
         }
         
         public IActionResult Create()
@@ -37,6 +44,7 @@ namespace CloudWallet.Controllers
                 var publicJWK = new JsonWebKey(didself.IdentifierPublicKeyJWK);
                 var thumbprint = publicJWK.ComputeJwkThumbprint();
                 didself.Did = Base64UrlEncoder.Encode(thumbprint);
+                didself.Owner = currentUser;
                 System.Diagnostics.Debug.WriteLine("Created:" + didself.Did);
                 _context.Add(didself);
                 await _context.SaveChangesAsync();
@@ -49,7 +57,7 @@ namespace CloudWallet.Controllers
         {
             string response = string.Empty;
             //TODO add security check
-            var did = _context.DidselfDIDs.FirstOrDefault(q => q.Id == id);
+            var did = _context.DidselfDIDs.FirstOrDefault(q => q.Id == id && q.Owner==currentUser);
             if (did != null)
             {
                 response = $@"
@@ -74,8 +82,12 @@ namespace CloudWallet.Controllers
             {
                 return NotFound();
             }
-            var authorization = _context.DidselfDIDs.Where(m => m.Id == id).FirstOrDefault();
-            return View(authorization);
+            var authorization = _context.DidselfDIDs.Where(m => m.Id == id && m.Owner == currentUser).FirstOrDefault();
+			if (authorization == null)
+			{
+				return NotFound();
+			}
+			return View(authorization);
         }
 
 
@@ -83,7 +95,7 @@ namespace CloudWallet.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var resource = _context.DidselfDIDs.Where(m => m.Id == id).FirstOrDefault();
+            var resource = _context.DidselfDIDs.Where(m => m.Id == id && m.Owner == currentUser).FirstOrDefault();
 
             if (resource == null)
             {
@@ -96,7 +108,7 @@ namespace CloudWallet.Controllers
 
         public IActionResult Manage(int id)
         {
-            var delegation = _context.Delegations.FirstOrDefault(m => m.DidSelfId == id);
+            var delegation = _context.Delegations.FirstOrDefault(m => m.DidSelfId == id && m.Owner == currentUser);
             @ViewData["DidSelfId"] = id;
             return View(delegation);
         }

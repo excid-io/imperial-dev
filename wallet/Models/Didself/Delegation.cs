@@ -14,9 +14,10 @@ namespace CloudWallet.Models.Didself
         public int DidSelfId { get; set; }
         public int AuthType { get; set; }
         public string AuthClaim { get; set; } = string.Empty;
-        public bool isEnabled { get; set; }
+        public bool isEnabled { get; set; } = false;
+		public string Owner { get; set; } = string.Empty;
 
-        [NotMapped]
+		[NotMapped]
         public static readonly List<SelectListItem> AuthTypes = new List<SelectListItem>()
         {
             new SelectListItem {Text = "None", Value = "0"},
