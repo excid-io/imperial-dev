@@ -140,6 +140,12 @@ namespace Wallet.Controllers
             return RedirectToAction(nameof(Index));
         }
 
+        public IActionResult List()
+        {
+            var certificates = _context.DidselfDIDs.Where(q => q.Owner == currentUser).Select(q => new { q.Id, q.Name }).ToList();
+            return Json(certificates);
+        }
+
         public IActionResult Manage(int id)
         {
             var delegation = _context.Delegations.FirstOrDefault(m => m.DidSelfId == id && m.Owner == currentUser);

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -26,15 +27,15 @@ namespace iam.Controllers
         [HttpPost]
         public IActionResult Index([FromBody] CredentialRequest request)
         {
-            System.Diagnostics.Debug.WriteLine("Received:" + request.proof.jwt);
-            var tokenHandler = new JwtSecurityTokenHandler();
-            var proof = tokenHandler.ReadJwtToken(request.proof.jwt);
+            //System.Diagnostics.Debug.WriteLine("Received:" + request.proof.jwt);
+            //var tokenHandler = new JwtSecurityTokenHandler();
+            //var proof = tokenHandler.ReadJwtToken(request.proof.jwt);
             StringValues code;
             Request.Headers.TryGetValue("Authorization", out code);
-            if (proof != null && code.Count > 0) {
+            if (code.Count > 0) {
                 string tokenId = code!.First()!.Split(" ")[1];
                 System.Diagnostics.Debug.WriteLine("Code:" + tokenId);
-                string? did = proof.Header["kid"].ToString();
+                string? did = TempContext.Tokens.FirstOrDefault(t => t.Id == tokenId)!.clientId;
                 int? auth_id = TempContext.Tokens.FirstOrDefault(t => t.Id == tokenId)!.AuthorizationId;
                 if (did != null && auth_id!=null)
                 {

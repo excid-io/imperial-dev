@@ -77,10 +77,10 @@ class Handler():
                         output_header['Location'] = "http://localhost:8002/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
                     object = req.path.split('/')[-1]
-                    is_client_authorized, info = self.token_pdp.get_info(auth_grant)
+                    is_client_authorized, ver_output = self.token_pdp.get_info(auth_grant)
                     if is_client_authorized:
-                        result = self.openFGAPDP.check(info['user'], "access","resource:Camera1", info['relations'])
-                        is_client_authorized = result.allowed
+                        is_client_authorized, ver_output= self.openFGAPDP.check(ver_output['user'], "access","resource:"+object, ver_output['relations'])
+                       
                     #is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
             #*********VP***********

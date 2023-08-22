@@ -12,7 +12,7 @@ using System.Security.Claims;
 using Wallet.Models.Oidc4vci;
 using System.Net.Http.Headers;
 using System.Net;
-
+using Microsoft.IdentityModel.JsonWebTokens;
 
 namespace Wallet.Controllers
 {
@@ -51,16 +51,28 @@ namespace Wallet.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CredentialOfferRequest request)
         {
+            _logger.LogInformation("CredentialOfferRequest" + JsonSerializer.Serialize(request));
+            string clientId = string.Empty;
+            if (request.AuthType == 1)
+            {
+                var did = _context.DidselfDIDs.FirstOrDefault(q => q.Owner == currentUser && q.Id == request.AuthClaimId);
+                if (did != null)
+                {
+                    clientId = "did:self:" + did.Did;
+                }
+            }
             var tokenRequest= new FormUrlEncodedContent(new[]
                {
                     new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:pre-authorized_code"),
                     new KeyValuePair<string, string>("pre-authorized_code", request.PreAuthorizedCode),
+                    new KeyValuePair<string, string>("client_id", clientId),
                 });
             var tokenResponse = await httpClient.PostAsync(request.IssuerURL + "/token", tokenRequest);
             string content = await tokenResponse.Content.ReadAsStringAsync();
            
             if (content != "")
             {
+                _logger.LogInformation("Received token:" + content);
                 //var proof = CreateJWTProof(did, issuerURL);
                 var credRequest = new CredentialRequest
                 {
@@ -76,6 +88,7 @@ namespace Wallet.Controllers
                 string credential = await credResponse.Content.ReadAsStringAsync();
                 if (credential != "")
                 {
+                    _logger.LogInformation("Received credential:" + content);
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var decodedCredential = tokenHandler.ReadJwtToken(credential);
                     var item = new Credential();
@@ -88,6 +101,10 @@ namespace Wallet.Controllers
                     _context.Add(item);
                     await _context.SaveChangesAsync();
                 }
+                else
+                {
+                    _logger.LogWarning("Did not receive credential");
+                }
             }
             return Redirect(nameof(Index));
 
@@ -98,14 +115,14 @@ namespace Wallet.Controllers
             var credentialOfferRequest = new CredentialOfferRequest();
             if (credential_offer_uri != null)
             {
-                System.Diagnostics.Debug.WriteLine("Connecting to:" + credential_offer_uri);
+                _logger.LogInformation("Connecting to:" + credential_offer_uri);
                 var httpResponse = await httpClient.GetAsync(credential_offer_uri);
                 var credentialOffer = await httpResponse.Content.ReadFromJsonAsync<CredentialOffer>();
                 if (credentialOffer == null)
                 {
                     return NotFound();
                 }
-                System.Diagnostics.Debug.WriteLine("Received:" + credentialOffer.CredentialIssuer);
+                _logger.LogInformation("Received:" + credentialOffer.CredentialIssuer);
                 if (credentialOffer.Grants != null && credentialOffer.Grants.PreAuthorizedCode != null)
                 {
                     credentialOfferRequest.PreAuthorizedCode = credentialOffer.Grants.PreAuthorizedCode.Code;
@@ -122,7 +139,7 @@ namespace Wallet.Controllers
         {
             ViewData["ClientName"] = "Unknown client";
             ViewData["Type"] = "Unknown type";
-
+            string type = "";
             var scope = request.scope;
             if (scope == null)
             {
@@ -132,6 +149,7 @@ namespace Wallet.Controllers
             if (scope == "excid-io.github.io.imperial")
             {
                 ViewData["Type"] = "RelationsCredential";
+                type = "RelationsCredential";
             }
             else
             {
@@ -148,31 +166,60 @@ namespace Wallet.Controllers
                 }
 
             }
-            var credentials = _context.Credential.Where(q => q.type == "RelationsCredential").ToList();
+            var credentials = _context.Credential.Where(q => q.type == type).ToList();
             return View(credentials);
         }
 
         [HttpPost, ActionName("Authorize")]
-        public async Task<IActionResult> AuthorizeConfirmed(AuthorizationRequest request, string cred_id="")
+        public async Task<IActionResult> AuthorizeConfirmed(AuthorizationRequest request, List<string>? credIds)
         {
-            System.Diagnostics.Debug.WriteLine("Received authorization for: " + cred_id);
-            var _credential = _context.Credential.Where(q => q.jti == cred_id).FirstOrDefault();
-            if (_credential != null && request!.response_uri != null)
+            if (credIds == null || credIds.Count==0)
+            {
+                return View("Index");
+            }
+            _logger.LogInformation("Received authorization for: " + JsonSerializer.Serialize(credIds));
+
+            List<string> VCs = new();
+            foreach (var credId in credIds)
+            {
+                var VC = _context.Credential.Where(q => q.jti == credId).FirstOrDefault();
+                if (VC != null)
+                {
+                    VCs.Add(VC.b64credential);
+                }
+            }
+            
+            var vpToken = new JwtPayload()
+            {
+                { "vp", new Dictionary<String, Object>()
+                    {
+                        {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1"}},
+                        {"type", new String[]{ "VerifiablePresentation" } },
+                        {"verifiableCredential",VCs }
+                    }
+                }
+            };
+            var jwtHeader = new JwtHeader(
+                signingCredentials: null);
+            var jwtToken = new JwtSecurityToken(jwtHeader, vpToken);
+            var jwtTokenHandler = new JwtSecurityTokenHandler();
+            if (request!.response_uri != null)
             {
                 // https://openid.net/specs/openid-4-verifiable-presentations-1_0.html Section 6
                 var authorization_response = new FormUrlEncodedContent(new[]
                 {
                     new KeyValuePair<string, string>("state", request.state!),
-                    new KeyValuePair<string, string>("vp_token", _credential.b64credential),
+                    new KeyValuePair<string, string>("vp_token", jwtTokenHandler.WriteToken(jwtToken)),
                 });
-                System.Diagnostics.Debug.WriteLine("Ready to post:" + _credential.jti + " to " + request.response_uri);
+                _logger.LogInformation("Ready to post:" + vpToken.Base64UrlEncode() + " to " + request.response_uri);
                 var response = await httpClient.PostAsync(request.response_uri, authorization_response);
             }
             else
             {
-                System.Diagnostics.Debug.WriteLine("Did not post anything");
+                _logger.LogInformation("Did not post anything");
             }
             return View("AuthorizeConfirmed");
+            
         }
 
         public IActionResult Details(int? id)

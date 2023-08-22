@@ -11,6 +11,7 @@ namespace Wallet.Models
 
         [Display(Name = "Subject Id")]
         public int AuthType { get; set; }
+        public int AuthClaimId { get; set; }
 
         public static readonly List<SelectListItem> Types = new List<SelectListItem>()
         {

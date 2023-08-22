@@ -4,6 +4,7 @@ import requests
 import json 
 from issuer import Issuer
 from jwcrypto import jwt, jwk
+from urllib.parse import urlparse, parse_qs
 
 class TestJWT:
 
@@ -27,10 +28,15 @@ class TestJWT:
         }
         vp_jwt = jwt.JWT(header=jwt_header, claims=vp)
         vp_jwt.make_signed_token(key)
+        response  = requests.get("http://localhost:9000/secure/Camera1", allow_redirects=False)
+        url = response.headers["Location"]
+        print(url)
+        parseResult = urlparse(url)
+        state = parse_qs(parseResult.query)["state"][0]
         headers = {}
-        data={"state":"teststate", "vp_token":vp_jwt.serialize()}
+        data={"state":state, "vp_token":vp_jwt.serialize()}
         response  = requests.post("http://localhost:9000/authorize", headers = headers, data=data)
-        headers = {"Authorization": "Bearer teststate"}
+        headers = {"Authorization": "Bearer " + state}
         response  = requests.post("http://localhost:9000/secure/Camera1", headers = headers)
         print(response.text)
         assert(response.status_code == 200)

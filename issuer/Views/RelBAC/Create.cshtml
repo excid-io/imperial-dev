@@ -61,11 +61,11 @@
                         <div id="collapse@(index)" class="accordion-collapse collapse" aria-labelledby="Obect@(index)" data-bs-parent="#accordionObjects">
                             <div class="accordion-body">
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox1" value="option1">
+                                    <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Read"][cindex]" value="@relObject.Name">
                                     <label class="form-check-label" for="inlineCheckbox1">R</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" id="inlineCheckbox2" value="option2">
+                                    <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Write"][cindex]"  value="@relObject.Name">
                                     <label class="form-check-label" for="inlineCheckbox2">W</label>
                                 </div>
                                 <span>@relObject.Name</span>
@@ -84,15 +84,16 @@
                                             <span>@Html.Raw(prefix)@relObject.Name</span>
                                             <br />
                                         }
-                                    async Task traverseObjects(Resource relObject, string prefix = "⨽")
-                                    {
+                                        async Task traverseObjects(Resource relObject, string prefix = "⨽")
+                                        {
                                             foreach (var child in relObjects!.Where(q => q.Parent == relObject.Name))
                                             {
                                                 await renderCheckBoxes(child, prefix, cindex);
                                                 cindex++;
                                                 await traverseObjects(child, "&nbsp;&nbsp" + prefix);
-                                             }
+                                            }
                                         }
+                                        cindex++;
                                         await traverseObjects(relObject);
                                     }
                             </div>

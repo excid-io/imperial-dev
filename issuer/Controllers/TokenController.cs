@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
+using System.Text.Json;
 
 namespace iam.Controllers
 {
@@ -11,10 +12,12 @@ namespace iam.Controllers
     public class TokenController : Controller
     {
         private readonly IamDbContext _context;
+        private readonly ILogger<TokenController> _logger;
 
-        public TokenController(IConfiguration configuration, ILogger<HomeController> logger, IamDbContext context)
+        public TokenController(IConfiguration configuration, ILogger<TokenController> logger, IamDbContext context)
         {
             _context = context;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -35,6 +38,8 @@ namespace iam.Controllers
                 var token = new Token();
                 token.Id = RandomString();
                 token.AuthorizationId = authorization.Id;
+                token.clientId = request.client_id;
+                _logger.LogInformation("Token:" + JsonSerializer.Serialize(token));
                 TempContext.Tokens.Add(token);
                 return Ok(token.Id);
 

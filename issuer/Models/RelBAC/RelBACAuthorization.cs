@@ -66,7 +66,7 @@ namespace iam.Models.RelBAC
                     {"credentialSubject", new Dictionary<String, Object>()
                         {
                         {"id", SubjectId},
-                        {"relationships",JsonSerializer.Deserialize<List<Dictionary<string, string>>>(Relationships)!}
+                        {"relationships",Relationships!=string.Empty?JsonSerializer.Deserialize<List<Dictionary<string, string>>>(Relationships)!:""}
                         }
                     },
                     {"credentialStatus", new Dictionary<String, Object>()

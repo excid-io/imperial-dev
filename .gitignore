@@ -526,4 +526,5 @@ cython_debug/
 # Project specific files
 cloud-wallet.db
 iam.db
+wallet.db
 Migrations/
