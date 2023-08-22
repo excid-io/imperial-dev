@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 using System.Xml.Linq;
 
-namespace CloudWallet.Models.Oidc4vci
+namespace Wallet.Models.Oidc4vci
 {
     public class CredentialOffer
     {
-
-
         [JsonPropertyName("credential_issuer")]
         public string CredentialIssuer { get; set; } = string.Empty;
 
@@ -50,4 +50,5 @@ namespace CloudWallet.Models.Oidc4vci
         [JsonPropertyName("issuer_state")]
         public string IssuerState { get; set; } = string.Empty;
     }
+
 }

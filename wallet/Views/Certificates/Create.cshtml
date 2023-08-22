@@ -1,0 +1,47 @@
+﻿@model Wallet.Models.Certificate
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Certificate" asp-action="Index">Certificates</a></li>
+        <li class="breadcrumb-item active">Add</li>
+    </ol>
+</nav>
+<div class="card mt-3" id="Add">
+    <h5 class="card-header">Add new certificate</h5>
+    <div class="card-body">
+        <div id="form" class="mt-3" >
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <div class="mb-3 row">
+                    <label asp-for="Name" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <input type="text" class="form-control" asp-for="Name" />
+                    </div>
+                    <div class="col-sm-6">
+                        <span asp-validation-for="Name" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label asp-for="X509" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <textarea class="form-control" asp-for="X509" rows="3"></textarea>
+                    </div>
+                    <div class="col-sm-6">
+                        <span asp-validation-for="X509" class="text-danger"></span>
+                    </div>
+                </div>
+                <div class="mb-3 row">
+                    <label asp-for="PrivateKey" class="col-sm-2 col-form-label"></label>
+                    <div class="col-sm-4">
+                        <textarea class="form-control" asp-for="PrivateKey" rows="3"></textarea>
+                    </div>
+                    <div class="col-sm-6">
+                        <span asp-validation-for="PrivateKey" class="text-danger"></span>
+                    </div>
+                </div>
+                <input type="submit" class="btn btn-primary" value="Save">
+            </form>
+        </div>
+    </div>
+</div>

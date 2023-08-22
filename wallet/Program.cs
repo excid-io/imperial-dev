@@ -1,4 +1,4 @@
-using CloudWallet.Data;
+using Wallet.Data;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;

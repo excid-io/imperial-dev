@@ -1,18 +1,18 @@
 ﻿
-using CloudWallet.Controllers;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using System.Security.Claims;
+using Wallet.Models;
 
 /*
  * A simple accountcontroller used for testing authorization
  * using RBAC. Accounts and roles are provided in the configuration
  * file.
  */
-namespace iam.Controllers
+namespace Wallet.Controllers
 {
     public class AccountController : Controller
     {
@@ -46,32 +46,27 @@ namespace iam.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Login(string Username, string Password)
         {
-            var authorizedUserEntry = _configuration.GetSection("AuthorizedUsers").GetSection(Username);
-            if (authorizedUserEntry.Exists())
-            {
-                if (authorizedUserEntry["Password"] != Password)
+            var authorizedUsers = _configuration.GetSection("AuthorizedUsers").Get<List<AuthorizedUser>>();
+            var authorizedUserEntry = authorizedUsers.Where(q => q.Username == Username && q.Password == Password).FirstOrDefault();
+            if (authorizedUserEntry != null)
+            { 
+                var claims = new List<Claim>();
+                claims.Add(new Claim(ClaimTypes.Name, Username));
+                var roles = authorizedUserEntry.Roles;
+                foreach (var role in roles)
                 {
-                    ViewData["ErrorDscr"] = "Incorrect password";
+                    claims.Add(new Claim(ClaimTypes.Role, role));
                 }
-                else
-                {
-                    var claims = new List<Claim>();
-                    claims.Add(new Claim(ClaimTypes.Name, Username));
-                    var roles = authorizedUserEntry.GetSection("Roles").Get<string[]>();
-                    foreach (var role in roles)
-                    {
-                        claims.Add(new Claim(ClaimTypes.Role, role));
-                    }
 
-                    var claimsIdentity = new ClaimsIdentity(
-                        claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var claimsIdentity = new ClaimsIdentity(
+                    claims, CookieAuthenticationDefaults.AuthenticationScheme);
 
-                    await HttpContext.SignInAsync(
-                        CookieAuthenticationDefaults.AuthenticationScheme,
-                        new ClaimsPrincipal(claimsIdentity));
+                await HttpContext.SignInAsync(
+                    CookieAuthenticationDefaults.AuthenticationScheme,
+                    new ClaimsPrincipal(claimsIdentity));
                 
-                    return RedirectToAction("Index", "Home");
-                }
+                return RedirectToAction("Index", "Home");
+                
             }
             else
             {

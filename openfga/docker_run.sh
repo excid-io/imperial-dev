@@ -1,1 +1,1 @@
-docker run --rm -p 8080:8080 -p 8081:8081 -p 3000:3000 openfga/openfga run
+docker run -d --rm -p 5004:8080 -p 5005:8081 -p 5006:3000 openfga/openfga run

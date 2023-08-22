@@ -1,9 +1,9 @@
-﻿@model IEnumerable<Wallet.Models.Profile>
+﻿@model IEnumerable<Wallet.Models.Certificate>
 
 <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
         <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
-        <li class="breadcrumb-item active">Profiles</li>
+        <li class="breadcrumb-item active">Certificates</li>
     </ol>
 </nav>
 <div class="btn-toolbar" role="toolbar" aria-label="...">
@@ -14,7 +14,7 @@
 <table class="table table-striped panel">
     <thead>
         <tr>
-            <th style="width: 70%" scope="col">Profiles</th>
+            <th style="width: 70%" scope="col">Certificates</th>
             <th scope="col">Actions</th>
         </tr>
     </thead>
@@ -22,7 +22,7 @@
         @foreach (var item in Model)
         {
             <tr>
-                <td>@Html.DisplayFor(modelItem => item.ProfileName)</td>
+                <td>@Html.DisplayFor(modelItem => item.Name)</td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.ID" class="btn">
                         <img src="img/edit.svg" alt="edit" title="Edit"><br />

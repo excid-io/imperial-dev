@@ -1,4 +1,4 @@
-﻿@model IEnumerable<CloudWallet.Models.Didself.Didself>
+﻿@model IEnumerable<Wallet.Models.Didself.Didself>
 
 <h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
 <hr/>
@@ -30,9 +30,9 @@
                         <img src="~/img/info.svg" alt="details" title="Details" height="25"><br />
                         <small>Details</small>
                     </a>
-                    <a class="btn" asp-action="Manage" asp-route-id="@item.Id" class="btn">
-                        <img src="~/img/edit.svg" alt="Manage" title="Manage" height="25"><br />
-                        <small>Manage</small>
+                    <a class="btn" asp-action="Delegate" asp-route-id="@item.Id">
+                        <img src="~/img/share.svg" alt="Delegate" title="Delegate" height="25"><br />
+                                                                                               <small>Delegate</small>
                     </a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn">
                         <img src="~/img/delete.svg" alt="key" title="Delete" height="25"><br />

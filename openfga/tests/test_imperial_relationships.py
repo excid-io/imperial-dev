@@ -15,6 +15,11 @@ class TestImperialRelationShips:
         print(result)
         assert(result.allowed == True)
 
+    def test_simple_invalid(self):
+        result = self.openFGAPDP.check("company:ACME2", "access","resource:Camera1",[["company:ACME", "access","resource:Camera1"]])
+        print(result)
+        assert(result.allowed == False)
+
 
 
     

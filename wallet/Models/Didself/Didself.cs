@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace CloudWallet.Models.Didself
+namespace Wallet.Models.Didself
 {
     public class Didself
     {

@@ -1,5 +1,5 @@
-﻿using CloudWallet.Data;
-using CloudWallet.Models;
+﻿using Wallet.Data;
+using Wallet.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Http.Json;
 using System.Net.Http;
@@ -9,11 +9,12 @@ using System.Net.Http;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using CloudWallet.Models.Oidc4vci;
+using Wallet.Models.Oidc4vci;
 using System.Net.Http.Headers;
 using System.Net;
 
-namespace CloudWallet.Controllers
+
+namespace Wallet.Controllers
 {
     public class CredentialsController : Controller
     {
@@ -48,36 +49,37 @@ namespace CloudWallet.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(string preAuthorizedCode, string issuerURL, string credentialType, int did)
+        public async Task<IActionResult> Create(CredentialOfferRequest request)
         {
             var tokenRequest= new FormUrlEncodedContent(new[]
                {
                     new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:pre-authorized_code"),
-                    new KeyValuePair<string, string>("pre-authorized_code", preAuthorizedCode),
+                    new KeyValuePair<string, string>("pre-authorized_code", request.PreAuthorizedCode),
                 });
-            var tokenResponse = await httpClient.PostAsync(issuerURL+"/token", tokenRequest);
+            var tokenResponse = await httpClient.PostAsync(request.IssuerURL + "/token", tokenRequest);
             string content = await tokenResponse.Content.ReadAsStringAsync();
+           
             if (content != "")
             {
-                var proof = CreateJWTProof(did, issuerURL);
+                //var proof = CreateJWTProof(did, issuerURL);
                 var credRequest = new CredentialRequest
                 {
                     format = "jwt_vc_json",
                     proof = new Proof
                     {
                         proof_type = "jwt",
-                        jwt = proof
+                        jwt = ""//proof
                     }
                 };
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", content);
-                var credResponse = await httpClient.PostAsJsonAsync(issuerURL + "/credential", credRequest);
+                var credResponse = await httpClient.PostAsJsonAsync(request.IssuerURL + "/credential", credRequest);
                 string credential = await credResponse.Content.ReadAsStringAsync();
                 if (credential != "")
                 {
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var decodedCredential = tokenHandler.ReadJwtToken(credential);
                     var item = new Credential();
-                    item.type = credentialType;
+                    item.type = request.CredentialType;
                     item.iss = decodedCredential.Payload["iss"].ToString()!;
                     item.jti = decodedCredential.Payload["jti"].ToString()!;
                     item.b64credential = credential;
@@ -91,21 +93,27 @@ namespace CloudWallet.Controllers
 
         }
 
-        public async Task<IActionResult> Offer(string credential_offer_uri)
+        public async Task<IActionResult> Offer(String? credential_offer_uri)
         {
-            System.Diagnostics.Debug.WriteLine("Connecting to:" + credential_offer_uri);
-            var httpResponse = await httpClient.GetAsync(credential_offer_uri);
-            var credentialOffer = await httpResponse.Content.ReadFromJsonAsync<CredentialOffer>();
-            if(credentialOffer == null)
+            var credentialOfferRequest = new CredentialOfferRequest();
+            if (credential_offer_uri != null)
             {
-                return NotFound();
+                System.Diagnostics.Debug.WriteLine("Connecting to:" + credential_offer_uri);
+                var httpResponse = await httpClient.GetAsync(credential_offer_uri);
+                var credentialOffer = await httpResponse.Content.ReadFromJsonAsync<CredentialOffer>();
+                if (credentialOffer == null)
+                {
+                    return NotFound();
+                }
+                System.Diagnostics.Debug.WriteLine("Received:" + credentialOffer.CredentialIssuer);
+                if (credentialOffer.Grants != null && credentialOffer.Grants.PreAuthorizedCode != null)
+                {
+                    credentialOfferRequest.PreAuthorizedCode = credentialOffer.Grants.PreAuthorizedCode.Code;
+                }
+                credentialOfferRequest.CredentialType = credentialOffer.Credentials.First().Types[1];
+                credentialOfferRequest.IssuerURL = credentialOffer.CredentialIssuer;
             }
-            System.Diagnostics.Debug.WriteLine("Received:" + credentialOffer.CredentialIssuer);
-            ViewData["DIDs"] = _context.DidselfDIDs.Where(q=>q.Owner == currentUser).ToList();
-            ViewData["preAuthorizedCode"] = credentialOffer.Grants.PreAuthorizedCode.Code;
-            ViewData["credentialType"] = credentialOffer.Credentials.First().Types[1];
-			ViewData["issuerURL"] = credentialOffer.CredentialIssuer;
-            return View();
+            return View(credentialOfferRequest);
         }
 
         

@@ -1,0 +1,19 @@
+﻿@using Wallet.Models.Didself;
+@model IEnumerable<Delegation>
+@{var did = ViewData["did"] as Didself;}
+
+<h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
+<hr />
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Didself" asp-action="Index">DIDs</a></li>
+        <li class="breadcrumb-item active">@did!.Name</li>
+    </ol>
+</nav>
+<div class="btn-toolbar" role="toolbar" aria-label="...">
+    <a class="btn" asp-action="AddDelegation" asp-route-id="@did.Id">
+        <img src="~/img/add.svg" alt="AddDelagation"><br />Add
+    </a>
+</div>
+

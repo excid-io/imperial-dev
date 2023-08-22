@@ -1,7 +1,8 @@
 from werkzeug.wrappers       import Request, Response
 from werkzeug.routing        import Map, Rule
-#from pdp.token_pdp           import TokenPDP
+from pdp.token_pdp           import TokenPDP
 from pdp.vp_pdp              import VPPDP
+from pdp.openfga_pdp         import OpenFGA_PDP
 from proxy.http_proxy        import HTTPProxy
 from urllib.parse import urlencode
 import os
@@ -25,8 +26,9 @@ class Handler():
             if key == "default": continue
             self.url_map.add(rulefactory=Rule(key, endpoint=key))
         self.vp_pdp = VPPDP(True)
-        #self.token_pdp = TokenPDP()
+        self.token_pdp = TokenPDP()
         self.http_proxy = HTTPProxy()
+        self.openFGAPDP = OpenFGA_PDP(debug=True)
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)
@@ -70,15 +72,27 @@ class Handler():
                                 "client_name":"Demo verifier"
                             })
                         }
-                        #self.token_pdp.append_authorization_table(query_parameter['state'], {'active':'false', 'exp':''})
+                        self.token_pdp.append_authorization_table(query_parameter['state'], {})
                         code = 301
                         output_header['Location'] = "http://localhost:8002/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
                     object = req.path.split('/')[-1]
+                    is_client_authorized, info = self.token_pdp.get_info(auth_grant)
+                    if is_client_authorized:
+                        result = self.openFGAPDP.check(info['user'], "access","resource:Camera1", info['relations'])
+                        is_client_authorized = result.allowed
                     #is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
             #*********VP***********
             if ((resource['authorization']['type'] == "vp") ):
+                is_client_authorized, ver_output = self.vp_pdp.decide(request=req)
+                if(is_client_authorized):
+                    state = ver_output["state"]
+                    vcs = ver_output["vcs"]
+                    print("authorized for state",state, "with vcs:", vcs) 
+
+            #*********IMPERIAL***********
+            if ((resource['authorization']['type'] == "imperial") ):
                 is_client_authorized, ver_output = self.vp_pdp.decide(request=req)
                 if(is_client_authorized):
                     #token_payload = json.loads(decoded_token.objects['payload'].decode())
@@ -86,8 +100,37 @@ class Handler():
                     #user = token_payload["sub"]
                     state = ver_output["state"]
                     vcs = ver_output["vcs"]
+                    if state not in self.token_pdp.authorization_table:
+                        self.token_pdp.append_authorization_table(state, {})
+                    self.token_pdp.authorization_table[state]['relations']=[]
+                    firstVC = True
+                    for vc in vcs:
+                        user = vc['vc']['credentialSubject']['id'].split(":")[-1]
+                        relationships = vc['vc']['credentialSubject']['relationships']
+                        relationship = []
+                        for relation in relationships:
+                            key = list(relation.keys())[0]
+                            value = relation[key]
+                            if (value=="authorized"):
+                                company=key.split(":")[-1]
+                                relationship.append("employee:"+user)
+                                relationship.append(value)
+                                relationship.append("company:"+company)
+                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                if firstVC:
+                                     # The first VC includes the user
+                                    self.token_pdp.authorization_table[state]['user']= "employee:"+user
+                            if (value=="access"):
+                                relationship.append("company:"+user+"#authorized")
+                                relationship.append(value)
+                                relationship.append("resource:"+key)
+                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                if firstVC:
+                                     # The first VC includes the user
+                                    self.token_pdp.authorization_table[state]['user']= "company:"+user
+                            firstVC= False
                     #self.token_pdp.authorization_table[ver_output["state"]]={"user":ver_output["user"], "relations":ver_output["relations"]}
-                    #print(self.token_pdp.authorization_table)
+                    print(self.token_pdp.authorization_table)
                     print("authorized for state",state, "with vcs:", vcs) 
 
             elif('authorization' not in resource):

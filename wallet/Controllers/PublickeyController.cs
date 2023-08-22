@@ -1,9 +1,9 @@
-﻿using CloudWallet.Models;
-using CloudWallet.Data;
+﻿using Wallet.Models;
+using Wallet.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace CloudWallet.Controllers
+namespace Wallet.Controllers
 {
     public class PublickeyController : Controller
     {

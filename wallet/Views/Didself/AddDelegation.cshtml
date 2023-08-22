@@ -1,0 +1,52 @@
+﻿@using Wallet.Models.Didself;
+@model Delegation
+@{var did = ViewData["did"] as Didself;}
+
+<h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
+<hr />
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Didself" asp-action="Index">DIDs</a></li>
+        <li class="breadcrumb-item active">@did!.Name</li>
+    </ol>
+</nav>
+<div class="card mt-3" id="Add">
+    <h5 class="card-header">Add new delegation</h5>
+    <div id="form" class="m-3">
+        <form asp-action="AddDelegation">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row mb-3">
+                <div class="col-sm-8">
+                    <label asp-for="AuthType" class="form-label"></label>
+                    <select asp-for="AuthType" asp-items="@Delegation.AuthTypes" class="form-select">
+                    </select>
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-sm-7">
+                    <input type="text" id="Pattern" class="form-control" placeholder="Search..." />
+                </div>
+                <div class="col-sm">
+                    <button type="button" class="btn btn-primary" onclick="getAuthClaims()">Search</button>
+                </div>
+            </div>
+            <input type="submit" class="btn btn-primary" value="Create">
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function getAuthClaims() {
+            var type = document.getElementById("AuthType").value;
+            var pattern = document.getElementById("Pattern").value;
+            if (type == 1) {
+                var request = fetch('/DIDSelf/ListUsers?pattern='+pattern).then((response) => {
+                    response.text().then((data) => {
+                        console.log(data)
+                    })
+                })
+            }
+        }</script>
+}

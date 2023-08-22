@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 
-namespace CloudWallet.Models
+namespace Wallet.Models
 {
     public class Credential
     {

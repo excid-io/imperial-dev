@@ -1,4 +1,4 @@
-﻿namespace CloudWallet.Models.Oidc4vci
+﻿namespace Wallet.Models.Oidc4vci
 {
     public class CredentialRequest
     {

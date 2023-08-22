@@ -1,4 +1,4 @@
-namespace CloudWallet.Models
+namespace Wallet.Models
 {
     public class ErrorViewModel
     {

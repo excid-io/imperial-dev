@@ -1,18 +1,21 @@
-﻿using CloudWallet.Data;
-using CloudWallet.Models.Didself;
+﻿using Wallet.Data;
+using Wallet.Models.Didself;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Configuration;
+using Wallet.Models;
 
-namespace CloudWallet.Controllers
+namespace Wallet.Controllers
 {
     public class DidselfController : Controller
     {
         private readonly WalletDBContext _context;
         private readonly ILogger<DidselfController> _logger;
-		private string currentUser
+        private readonly IConfiguration _configuration;
+        private string currentUser
 		{
 			get
 			{
@@ -20,16 +23,47 @@ namespace CloudWallet.Controllers
 			}
 		}
 
-		public DidselfController(ILogger<DidselfController> logger, WalletDBContext context)
+		public DidselfController(ILogger<DidselfController> logger, WalletDBContext context, IConfiguration configuration)
         {
             _logger = logger;
             _context = context;
+            _configuration = configuration;
         }
+
         public async Task<IActionResult> Index()
         {
             return View(await _context.DidselfDIDs.Where(q=>q.Owner==currentUser).ToListAsync());
         }
-        
+
+        public async Task<IActionResult> Delegate(int id)
+        {
+            var did = await _context.DidselfDIDs.Where(q => q.Owner == currentUser && q.Id == id).FirstOrDefaultAsync();
+            if(did == null)
+            {
+                return NotFound();
+            }
+            ViewData["did"] = did;
+            return View(await _context.Delegations.Where(m => m.DidSelfId == id && m.Owner == currentUser).ToListAsync());
+        }
+
+        public async Task<IActionResult> AddDelegation(int id)
+        {
+            var did = await _context.DidselfDIDs.Where(q => q.Owner == currentUser && q.Id == id).FirstOrDefaultAsync();
+            if (did == null)
+            {
+                return NotFound();
+            }
+            ViewData["did"] = did;
+            return View();
+        }
+
+        public IActionResult ListUsers(string pattern)
+        {
+            var authorizedUsers = _configuration.GetSection("AuthorizedUsers").Get<List<AuthorizedUser>>();
+            var users = authorizedUsers.Where(q => q.Username.Contains(pattern)).Select(q => new { q.Username }).ToList();
+            return Json(users);
+        }
+
         public IActionResult Create()
         {
             return View();
@@ -113,6 +147,7 @@ namespace CloudWallet.Controllers
             return View(delegation);
         }
 
+        /*
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delegate([Bind("DidSelfId", "AuthType", "AuthClaim", "isEnabled")] Delegation delegation)
@@ -124,6 +159,6 @@ namespace CloudWallet.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return RedirectToAction(nameof(Manage));
-        }
+        }*/
     }
 }

@@ -1,8 +1,8 @@
-﻿using CloudWallet.Models;
+﻿using Wallet.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace CloudWallet.Controllers
+namespace Wallet.Controllers
 {
     public class HomeController : Controller
     {
