@@ -66,7 +66,7 @@ class Handler():
                             'nonce' : secrets.token_urlsafe(16),
                             'response_type': 'vp_token',
                             'response_mode' : 'direct_post',
-                            'response_uri': 'http://localhost:9000/authorize',
+                            'response_uri': 'https://twin.excid.io/authorize',
                             'state': secrets.token_urlsafe(16),
                             'client_metadata': json.dumps({
                                 "client_name":"Demo verifier"
@@ -74,7 +74,7 @@ class Handler():
                         }
                         self.token_pdp.append_authorization_table(query_parameter['state'], {})
                         code = 301
-                        output_header['Location'] = "http://localhost:8002/Credentials/Authorize?" + urlencode(query_parameter)
+                        output_header['Location'] = "https://comp-wallet.excid.io/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
                     object = req.path.split('/')[-1]
                     is_client_authorized, ver_output = self.token_pdp.get_info(auth_grant)

@@ -2,7 +2,7 @@ import requests
 from urllib.parse import urlparse, parse_qs
 
 # 1. Unauthorized request
-response  = requests.get("http://localhost:9000/secure/Power1", allow_redirects=False)
+response  = requests.get("https://twin.excid.io/secure/Camera1", allow_redirects=False)
 if (response.status_code != 301): # This shouldn't happen
     print(response.status_code)
     exit() 
@@ -14,7 +14,7 @@ input("Press any key when authorization is completed...")
 
 # 2. Authorized request
 headers = {'Authorization':'Bearer ' + token}
-response  = requests.get("http://localhost:9000/secure/Power1",  headers = headers)
+response  = requests.get("https://twin.excid.io/secure/Camera1",  headers = headers)
 if (response.status_code == 200):
     print(response.text)
 else:
