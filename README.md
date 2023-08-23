@@ -14,3 +14,6 @@ IMPERIAL's policy enforcement point
 
 ### Wallet
 IMPERIAL's cloud-based wallet
+
+### Tests
+Tests for IMPERIAL's authorization flow

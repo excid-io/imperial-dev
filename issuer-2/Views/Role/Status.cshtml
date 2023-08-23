@@ -1,0 +1,22 @@
+﻿@model iam.Models.Role.Authorization
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="RelBAC" asp-action="Index">Authorizations</a></li>
+        <li class="breadcrumb-item active">Change Authorization Status</li>
+    </ol>
+</nav>
+
+<div class="col-md-6">
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Warning</h4>
+        <p>You are about to change the status of an authorization.</p>
+        <hr>
+        <p class="mb-0">Are you sure you want to perform this action?</p>
+        <form asp-action="Status">
+            <a class="btn btn-link" asp-action="Index" role="button">Cancel</a>
+            <input type="submit" value="Yes, change" class="btn btn-danger" />
+        </form>
+    </div>
+</div>

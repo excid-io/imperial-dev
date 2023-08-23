@@ -1,19 +1,20 @@
 ﻿using iam.Data;
-using iam.Models.RelBAC;
+using iam.Models.Role;
 using Microsoft.AspNetCore.Mvc;
 using System.Net;
+using System.Resources;
 using System.Security.Cryptography;
 using System.Text.Json;
 
 namespace iam.Controllers
 {
-    public class RelBACController : Controller
+    public class RoleController : Controller
     {
         private readonly IConfiguration _configuration;
         private readonly IamDbContext _context;
-        private readonly ILogger<HomeController> _logger;
+        private readonly ILogger<RoleController> _logger;
 
-        public RelBACController(IConfiguration configuration, ILogger<HomeController> logger, IamDbContext context)
+        public RoleController(IConfiguration configuration, ILogger<RoleController> logger, IamDbContext context)
         {
             _configuration = configuration;
             _logger = logger;
@@ -22,13 +23,15 @@ namespace iam.Controllers
 
         public IActionResult Index()
         {
+            ViewData["wallet_url"] = _configuration["wallet_url"];
+            ViewData["iss_url"] = _configuration["iss_url"];
             var authorizations = _context.Authorizations.ToList();
             return View(authorizations);
         }
 
         public IActionResult Create()
         {
-           var resources = _configuration.GetSection("Objects").Get<List<Resource>>();
+            var resources = _configuration.GetSection("Roles").Get<List<String>>();
             ViewData["relObjects"] = resources;
             return View();
         }
@@ -36,16 +39,18 @@ namespace iam.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Name", "AuthType", "Relations")] Models.RelBAC.Authorization authorization)
+        public async Task<IActionResult> Create([Bind("Name", "AuthType", "AvailableRoles")] Models.Role.Authorization authorization)
         {
-            List<Dictionary<string, string>> relations = new List <Dictionary<string, string>>();
-            foreach (var relation in authorization.Relations["access"])
+            List<Dictionary<string, string>> roles = new ();
+            foreach (var role in authorization.AvailableRoles)
             {
-                if (relation != "false")
-                    relations.Add(new Dictionary<string, string>(){ { relation, "access" } });
+                if (role != "false")
+                    roles.Add(new Dictionary<string, string>() { { "ACME", role } });
             }  
-            authorization.Relationships = JsonSerializer.Serialize(relations);
+
+            authorization.Roles = JsonSerializer.Serialize(roles);
             authorization.Code = RandomString();
+            _logger.LogInformation("Added new assignment:" + JsonSerializer.Serialize(authorization));
             _context.Add(authorization);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
@@ -110,7 +115,7 @@ namespace iam.Controllers
             var authorization = _context.Authorizations.FirstOrDefault(q => q.Id == id);
             if (authorization != null)
             {
-                response = authorization.Relationships;
+                response = authorization.Roles;
             }
             return Ok(response);
         }

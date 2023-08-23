@@ -1,0 +1,85 @@
+﻿@using iam.Models.Role
+@model Authorization
+@{
+    var relObjects = ViewData["relObjects"] as List<String>;
+}
+
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-controller="Role" asp-action="Index">Assignments</a></li>
+        <li class="breadcrumb-item active">New assignment</li>
+    </ol>
+</nav>
+<div class="col-md-6">
+    <form asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+        <div id="step1">
+            <h4 class="my-4"><span class="border-bottom"> Basic Information </span></h4>
+            <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: 50%">50%</div>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="control-label mb-1"></label>
+                <input asp-for="Name" class="form-control" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="AuthType" class="control-label mb-1"></label>
+                <select asp-for="AuthType" asp-items="@Authorization.AuthTypes" class="form-select">
+                </select>
+                <span asp-validation-for="AuthType" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <label asp-for="AuthClaim" class="control-label mb-1">Client DID</label>
+                <input asp-for="AuthClaim" class="form-control" />
+                <span asp-validation-for="AuthClaim" class="text-danger"></span>
+            </div>
+            <div class="form-group mb-3">
+                <button type="button" class="btn btn-light" onclick="toggleDivs()">Next</button>
+                <a class="btn btn-link" asp-action="Index" role="button">Cancel</a>
+            </div>
+        </div>
+        <div id="step2" style="display:none">
+            <h4 class="my-4"><span class="border-bottom">Assign Roles</span></h4>
+            <div class="progress" role="progressbar" aria-label="Example with label" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+                <div class="progress-bar" style="width: 100%">100%</div>
+            </div>
+            <div class="accordion my-3" id="accordionObjects">
+                @{
+                    int index = 0;
+                }
+                @foreach (var relObject in relObjects!){ 
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="@Model.AvailableRoles[index]" value="@relObject">
+                        <label class="form-label" asp-for="@Model.AvailableRoles[index]">@relObject</label>
+                    </div>
+                    index++;
+                }
+            </div>
+            <div class="form-group mb-3">
+                <button type="button" class="btn btn-light" onclick="toggleDivs()">Previous</button>
+                <button type="submit" class="btn btn-primary mx-2">Save</button>
+                <a class="btn btn-link" asp-action="Index" role="button">Cancel</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+
+
+@section Scripts {
+    <script>
+        function toggleDivs(){
+            var step1 = document.getElementById("step1");
+            var step2 = document.getElementById("step2");
+            if (step1.style.display === "none") {
+                step1.style.display = "block";
+                step2.style.display = "none";
+            } else {
+                step1.style.display = "none";
+                step2.style.display = "block";
+            }
+        }
+    </script>
+}

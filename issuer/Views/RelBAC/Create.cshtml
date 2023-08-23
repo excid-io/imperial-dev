@@ -60,29 +60,20 @@
                         </h2>
                         <div id="collapse@(index)" class="accordion-collapse collapse" aria-labelledby="Obect@(index)" data-bs-parent="#accordionObjects">
                             <div class="accordion-body">
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Read"][cindex]" value="@relObject.Name">
-                                    <label class="form-check-label" for="inlineCheckbox1">R</label>
+                                <p><strong>Allow Access</strong></p>
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["access"][cindex]" value="@relObject.Name">
+                                    <label class="form-label" asp-for="@Model.Relations["access"][cindex]">@relObject.Name</label>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Write"][cindex]"  value="@relObject.Name">
-                                    <label class="form-check-label" for="inlineCheckbox2">W</label>
-                                </div>
-                                <span>@relObject.Name</span>
-                                <br />
+                                
                                     @{
                                         async Task renderCheckBoxes(Resource relObject,string prefix, int index)
                                         {
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["Read"][index]" value="@relObject.Name">
-                                                <label class="form-check-label" for="inlineCheckbox1">R</label>
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" asp-for="@Model.Relations["access"][index]" value="@relObject.Name">
+                                                <label class="form-label" asp-for="@Model.Relations["access"][cindex]">@Html.Raw(prefix)@relObject.Name</label>
                                             </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="checkbox"  asp-for="@Model.Relations["Write"][index]"  value="@relObject.Name">
-                                                <label class="form-check-label" for="inlineCheckbox2">W</label>
-                                            </div>
-                                            <span>@Html.Raw(prefix)@relObject.Name</span>
-                                            <br />
+                                    
                                         }
                                         async Task traverseObjects(Resource relObject, string prefix = "⨽")
                                         {
