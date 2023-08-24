@@ -108,12 +108,13 @@ class Handler():
                     for vc in vcs:
                         user = vc['vc']['credentialSubject']['id'].split(":")[-1]
                         relationships = vc['vc']['credentialSubject']['relationships']
-                        relationship = []
+                        
                         for relation in relationships:
                             key = list(relation.keys())[0]
                             value = relation[key]
                             if (value=="authorized"):
                                 company=key.split(":")[-1]
+                                relationship = []
                                 relationship.append("employee:"+user)
                                 relationship.append(value)
                                 relationship.append("company:"+company)
@@ -122,10 +123,12 @@ class Handler():
                                      # The first VC includes the user
                                     self.token_pdp.authorization_table[state]['user']= "employee:"+user
                             if (value=="access"):
+                                relationship = []
                                 relationship.append("company:"+user+"#authorized")
                                 relationship.append(value)
                                 relationship.append("resource:"+key)
                                 self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                relationship = []
                                 relationship.append("company:"+user)
                                 relationship.append(value)
                                 relationship.append("resource:"+key)
