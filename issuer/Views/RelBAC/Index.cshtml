@@ -91,7 +91,7 @@
 @section Scripts {
     <script>
         function showOfferModal(code) {
-            const walletURL = "http://localhost:8002/Credentials/Offer?credential_offer_uri=" + encodeURIComponent("http://localhost:8001/Offer/Index/" + code);
+            const walletURL = "@ViewData["wallet_url"]/Credentials/Offer?credential_offer_uri=" + encodeURIComponent("@ViewData["iss_url"]/Offer/Index/" + code);
             document.getElementById('credentialOffer').value = walletURL;
             document.getElementById('credentialOffer').aria = walletURL;
             document.getElementById('credentialOfferHref').href = walletURL;

@@ -41,16 +41,17 @@ namespace iam.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name", "AuthType", "AvailableRoles")] Models.Role.Authorization authorization)
         {
+            string companyId = _configuration["jwt_vc_iss"]!;
+            companyId = companyId.Substring(8);
             List<Dictionary<string, string>> roles = new ();
             foreach (var role in authorization.AvailableRoles)
             {
                 if (role != "false")
-                    roles.Add(new Dictionary<string, string>() { { "ACME", role } });
+                    roles.Add(new Dictionary<string, string>() { { companyId, role.ToLower() } });
             }  
 
             authorization.Roles = JsonSerializer.Serialize(roles);
             authorization.Code = RandomString();
-            _logger.LogInformation("Added new assignment:" + JsonSerializer.Serialize(authorization));
             _context.Add(authorization);
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));

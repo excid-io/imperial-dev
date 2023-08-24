@@ -31,6 +31,13 @@ namespace Wallet.Controllers
             return RedirectToAction(nameof(Login));
         }
 
+        public IActionResult ListUsers(string pattern)
+        {
+            var authorizedUsers = _configuration.GetSection("AuthorizedUsers").Get<List<AuthorizedUser>>();
+            var users = authorizedUsers.Where(q => q.Username.Contains(pattern)).Select(q => new { q.Username }).ToList();
+            return Json(users);
+        }
+
         [AllowAnonymous]
         public IActionResult Login()
         {

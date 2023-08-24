@@ -21,7 +21,7 @@
         <div id="collapseThree" class="accordion-collapse collapse show" aria-labelledby="headingThree" data-bs-parent="#didSelf">
             <div class="accordion-body">
                 <form asp-action="Delegate" method="post">
-                    <input type="hidden" asp-for="DidSelfId" value="@ViewData["DidSelfId"]" />
+                    <input type="hidden" asp-for="ObjectId" value="@ViewData["DidSelfId"]" />
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" asp-for="isEnabled">
                         <label class="form-check-label" asp-for="isEnabled" >Enable Delegation</label>

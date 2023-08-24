@@ -42,7 +42,7 @@ namespace iam.Controllers
                     var authorization = _context.Authorizations.FirstOrDefault(q=>q.Id== auth_id);
                     if (authorization != null)
                     {
-                        authorization.IssuerURL = _configuration["iss_url"] ?? "";
+                        authorization.IssuerURL = _configuration["jwt_vc_iss"] ?? "";
                         authorization.SubjectId = did;
                         var credential = authorization.Credential;
                         string vc = JWTSignedCredential(credential);
@@ -101,7 +101,7 @@ namespace iam.Controllers
 
             var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
             var exp = DateTimeOffset.UtcNow.AddDays(1).ToUnixTimeSeconds();
-            var iss = _configuration["iss_url"];
+            var iss = _configuration["jwt_vc_iss"];
             var vc = new Dictionary<String, Object>()
             {
                 {"@context", new String[]{ "https://www.w3.org/2018/credentials/v1", "https://w3id.org/vc/status-list/v1"}},

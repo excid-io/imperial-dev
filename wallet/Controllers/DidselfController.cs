@@ -43,7 +43,7 @@ namespace Wallet.Controllers
                 return NotFound();
             }
             ViewData["did"] = did;
-            return View(await _context.Delegations.Where(m => m.DidSelfId == id && m.Owner == currentUser).ToListAsync());
+            return View(await _context.Delegations.Where(m => m.ObjectId == id && m.ObjectType == 1 &&  m.Owner == currentUser).ToListAsync());
         }
 
         public async Task<IActionResult> AddDelegation(int id)
@@ -57,13 +57,20 @@ namespace Wallet.Controllers
             return View();
         }
 
-        public IActionResult ListUsers(string pattern)
+        [HttpPost]
+        public async Task<IActionResult> AddDelegation(Delegation delegation)
         {
-            var authorizedUsers = _configuration.GetSection("AuthorizedUsers").Get<List<AuthorizedUser>>();
-            var users = authorizedUsers.Where(q => q.Username.Contains(pattern)).Select(q => new { q.Username }).ToList();
-            return Json(users);
+            var vc = await _context.DidselfDIDs.Where(q => q.Owner == currentUser && q.Id == delegation.ObjectId).FirstOrDefaultAsync();
+            if (vc == null)
+            {
+                return NotFound();
+            }
+            delegation.Owner = currentUser;
+            delegation.ObjectType = 1;
+            _context.Add(delegation);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
-
         public IActionResult Create()
         {
             return View();
@@ -86,7 +93,85 @@ namespace Wallet.Controllers
             }
             return View(didself);
         }
-        
+
+        public IActionResult Edit(int id)
+        {
+            var did = _context.DidselfDIDs.Where(q => q.Id == id && q.Owner == currentUser).FirstOrDefault();
+            if (did == null)
+            {
+                return NotFound();
+            }
+            return View(did);
+        }
+
+        [HttpPost, ActionName("Edit")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> EditPost(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var did = await _context.DidselfDIDs.FirstOrDefaultAsync(q => q.Id == id && q.Owner==currentUser);
+            if (did == null)
+            {
+                return NotFound();
+            }
+
+            if (await TryUpdateModelAsync(
+                did,
+                "",
+                s => s.Name,
+                s => s.AuthentiationPublicKeyJWK,
+                s=>s.AuthentiationPrivateKeyJWK))
+            {
+                try
+                {
+                    await _context.SaveChangesAsync();
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (DbUpdateException /* ex */)
+                {
+                    //Log the error (uncomment ex variable name and write a log.)
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                        "Try again, and if the problem persists, " +
+                        "see your system administrator.");
+                }
+            }
+            return View(did);
+        }
+
+        public async Task<IActionResult> Import()
+        {
+            var delegations = await _context.Delegations.Where(q => q.ObjectType == 1 && q.AuthType == 1 && q.AuthClaim == currentUser).ToListAsync();
+            return View(delegations);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Import(int delegationId)
+        {
+            var delegation = await _context.Delegations.Where(q => q.Id == delegationId).FirstOrDefaultAsync();
+            if (delegation == null)
+            {
+                return NotFound();
+            }
+            var did = await _context.DidselfDIDs.Where(q => q.Id == delegation.ObjectId).FirstOrDefaultAsync();
+            if (did == null)
+            {
+                return NotFound();
+            }
+            var item = new Didself();
+            item.Did = did.Did;
+            item.Name = did.Name;
+            item.Owner = currentUser;
+            item.IdentifierPrivateKeyJWK = did.IdentifierPrivateKeyJWK;
+            item.IdentifierPublicKeyJWK = did.AuthentiationPublicKeyJWK;
+            _context.Add(item);
+            _context.Delegations.Remove(delegation);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Edit", "Didself", new { id = item.Id });
+        }
+
         public IActionResult DIDDocument(int id)
         {
             string response = string.Empty;
@@ -148,7 +233,7 @@ namespace Wallet.Controllers
 
         public IActionResult Manage(int id)
         {
-            var delegation = _context.Delegations.FirstOrDefault(m => m.DidSelfId == id && m.Owner == currentUser);
+            var delegation = _context.Delegations.FirstOrDefault(m => m.ObjectId == id && m.Owner == currentUser);
             @ViewData["DidSelfId"] = id;
             return View(delegation);
         }

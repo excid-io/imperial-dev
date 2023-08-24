@@ -1,0 +1,29 @@
+﻿@model IEnumerable<Delegation>
+
+<h2 class="p-2 bg-light border rounded-1">did:self Identifiers</h2>
+<hr />
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+        <li class="breadcrumb-item"><a asp-action="Index">DIDs</a></li>
+        <li class="breadcrumb-item active">Import</li>
+    </ol>
+</nav>
+<div class="card mt-3">
+    <h5 class="card-header">Select DID to import</h5>
+    <div id="form" class="m-3">
+        <form asp-action="Import">
+            @foreach (var item in Model)
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="delegationId" id="@item.Id" value="@item.Id">
+                    <label class="form-check-label" for="@item.Id">
+                        @item.DIDName from @item.Owner
+                    </label>
+                </div>
+            }
+            <input type="submit" class="btn btn-primary" value="Import">
+        </form>
+    </div>
+</div>
+

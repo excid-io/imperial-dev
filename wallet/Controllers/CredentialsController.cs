@@ -13,6 +13,7 @@ using Wallet.Models.Oidc4vci;
 using System.Net.Http.Headers;
 using System.Net;
 using Microsoft.IdentityModel.JsonWebTokens;
+using Microsoft.EntityFrameworkCore;
 
 namespace Wallet.Controllers
 {
@@ -39,6 +40,75 @@ namespace Wallet.Controllers
         {
             var credentials = _context.Credential.Where(q=>q.Owner==currentUser).ToList();
             return View(credentials);
+        }
+
+        public async Task<IActionResult> Delegate(int id)
+        {
+            var vc = await _context.Credential.Where(q => q.Owner == currentUser && q.Id == id).FirstOrDefaultAsync();
+            if (vc == null)
+            {
+                return NotFound();
+            }
+            ViewData["vc"] = vc;
+            return View(await _context.Delegations.Where(m => m.ObjectId == id && m.ObjectType ==2 && m.Owner == currentUser).ToListAsync());
+        }
+
+        public async Task<IActionResult> AddDelegation(int id)
+        {
+            var vc = await _context.Credential.Where(q => q.Owner == currentUser && q.Id == id).FirstOrDefaultAsync();
+            if (vc == null)
+            {
+                return NotFound();
+            }
+            ViewData["vc"] = vc;
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddDelegation(Delegation delegation)
+        {
+            var vc = await _context.Credential.Where(q => q.Owner == currentUser && q.Id == delegation.ObjectId).FirstOrDefaultAsync();
+            if (vc == null)
+            {
+                return NotFound();
+            }
+            delegation.Owner = currentUser;
+            delegation.ObjectType = 2;
+            _context.Add(delegation);
+            await _context.SaveChangesAsync();
+            return Redirect(nameof(Index));
+        }
+
+        public async Task<IActionResult> Import()
+        {
+            var delegations = await _context.Delegations.Where(q=>q.ObjectType==2 && q.AuthType==1 && q.AuthClaim==currentUser).ToListAsync();
+            return View(delegations);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Import(int delegationId)
+        {
+            var delegation = await _context.Delegations.Where(q => q.Id == delegationId).FirstOrDefaultAsync();
+            if (delegation == null)
+            {
+                return NotFound();
+            }
+            var credential = await _context.Credential.Where(q => q.Id == delegation.ObjectId).FirstOrDefaultAsync();
+            if (credential == null)
+            {
+                return NotFound();
+            }
+            var item = new Credential();
+            item.type = credential.type;
+            item.iss = credential.iss;
+            item.jti = credential.jti;
+            item.b64credential = credential.b64credential;
+            item.payload = credential.payload;
+            item.Owner = currentUser;
+            _context.Add(item);
+            _context.Delegations.Remove(delegation);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(Index));
         }
 
         public IActionResult Create()
@@ -166,7 +236,7 @@ namespace Wallet.Controllers
                 }
 
             }
-            var credentials = _context.Credential.Where(q => q.type == type).ToList();
+            var credentials = _context.Credential.Where(q => q.type == type && q.Owner==currentUser).ToList();
             return View(credentials);
         }
 

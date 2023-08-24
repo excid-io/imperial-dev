@@ -10,7 +10,10 @@
 </nav>
 <div class="btn-toolbar" role="toolbar" aria-label="...">
     <a class="btn" asp-action="Create">
-        <img src="~/img/add.svg" alt="Create"><br />Add
+        <img src="~/img/add.svg" alt="Create" style="width:25px"><br />Add
+    </a>
+    <a class="btn" asp-action="Import">
+        <img src="~/img/import.svg" alt="Import" style="width:25px"><br />Import
     </a>
 </div>
 <table class="table table-striped panel">
@@ -30,9 +33,13 @@
                         <img src="~/img/info.svg" alt="details" title="Details" height="25"><br />
                         <small>Details</small>
                     </a>
+                    <a class="btn" asp-action="Edit" asp-route-id="@item.Id">
+                        <img src="~/img/edit.svg" alt="Edit" title="Edit" height="25"><br />
+                        <small>Edit</small>
+                    </a>
                     <a class="btn" asp-action="Delegate" asp-route-id="@item.Id">
                         <img src="~/img/share.svg" alt="Delegate" title="Delegate" height="25"><br />
-                                                                                               <small>Delegate</small>
+                        <small>Delegate</small>
                     </a>
                     <a asp-action="Delete" asp-route-id="@item.Id" class="btn">
                         <img src="~/img/delete.svg" alt="key" title="Delete" height="25"><br />

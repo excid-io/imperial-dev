@@ -37,9 +37,8 @@ namespace iam.Models.Role
         public static readonly List<SelectListItem> AuthTypes = new List<SelectListItem>()
         {
             new SelectListItem {Text = "None", Value = "0"},
-            new SelectListItem {Text = "Client DID", Value = "1", Selected=true},
-            new SelectListItem {Text = "Client public key", Value = "2"},
-            new SelectListItem {Text = "Client EORI", Value = "3"},
+            new SelectListItem {Text = "Decentralized Identifier", Value = "1", Selected=true},
+            new SelectListItem {Text = "X509 Certificate", Value = "2"},
         };
 
         [NotMapped]

@@ -60,6 +60,7 @@ class Handler():
                 if (not auth_type): # the user has not provided any token
                     token_endpoint = resource['authorization']['token_endpoint']
                     if (token_endpoint['type'] == "vc_verifier"): # send authorization request 
+                        object = req.path.split('/')[-1]
                         # https://openid.net/specs/openid-4-verifiable-presentations-1_0.html
                         query_parameter = {
                             'scope' : 'excid-io.github.io.imperial',
@@ -69,7 +70,7 @@ class Handler():
                             'response_uri': 'https://twin.excid.io/authorize',
                             'state': secrets.token_urlsafe(16),
                             'client_metadata': json.dumps({
-                                "client_name":"Demo verifier"
+                                "client_name":object
                             })
                         }
                         self.token_pdp.append_authorization_table(query_parameter['state'], {})
@@ -77,9 +78,9 @@ class Handler():
                         output_header['Location'] = "https://comp-wallet.excid.io/Credentials/Authorize?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
                     object = req.path.split('/')[-1]
-                    is_client_authorized, ver_output = self.token_pdp.get_info(auth_grant)
+                    is_client_authorized, info = self.token_pdp.get_info(auth_grant)
                     if is_client_authorized:
-                        is_client_authorized, ver_output= self.openFGAPDP.check(ver_output['user'], "access","resource:"+object, ver_output['relations'])
+                        is_client_authorized, ver_output= self.openFGAPDP.check(info['user'], "access","resource:"+object, info['relations'])
                        
                     #is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
