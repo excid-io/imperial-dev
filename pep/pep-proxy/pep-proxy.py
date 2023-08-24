@@ -126,6 +126,10 @@ class Handler():
                                 relationship.append(value)
                                 relationship.append("resource:"+key)
                                 self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                relationship.append("company:"+user)
+                                relationship.append(value)
+                                relationship.append("resource:"+key)
+                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
                                 if firstVC:
                                      # The first VC includes the user
                                     self.token_pdp.authorization_table[state]['user']= "company:"+user
