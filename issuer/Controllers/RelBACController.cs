@@ -40,6 +40,10 @@ namespace iam.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name", "AuthType", "Relations")] Models.RelBAC.Authorization authorization)
         {
+            if (ModelState.IsValid == false)
+            {
+                return View(authorization);
+            }
             List<Dictionary<string, string>> relations = new List <Dictionary<string, string>>();
             foreach (var relation in authorization.Relations["access"])
             {
