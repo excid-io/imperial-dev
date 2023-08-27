@@ -8,8 +8,8 @@ namespace Wallet.Models
         [Key]
         public int ID { get; set; }
 
-        [Required(ErrorMessage = "A Common Name is required")]
-        [DisplayName("Subject CN")]
+        [Required(ErrorMessage = "An identifier is required")]
+        [DisplayName("URL identifier for this certificate")]
         public string Name { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "A certificate is required")]

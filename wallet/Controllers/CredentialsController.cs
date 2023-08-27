@@ -131,6 +131,14 @@ namespace Wallet.Controllers
                     clientId = "did:self:" + did.Did;
                 }
             }
+            if (request.AuthType == 2)
+            {
+                var certificate = _context.Certificate.FirstOrDefault(q => q.Owner == currentUser && q.ID == request.AuthClaimId);
+                if (certificate != null)
+                {
+                    clientId = certificate.Name;
+                }
+            }
             var tokenRequest= new FormUrlEncodedContent(new[]
                {
                     new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:pre-authorized_code"),
