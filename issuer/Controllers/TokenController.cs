@@ -41,7 +41,7 @@ namespace iam.Controllers
                 token.clientId = request.client_id;
                 _logger.LogInformation("Token:" + JsonSerializer.Serialize(token));
                 TempContext.Tokens.Add(token);
-                return Ok(token.Id);
+                return Json(new { access_token = token.Id, token_type = "Bearer", expires_in = 3600 });
 
             }
 

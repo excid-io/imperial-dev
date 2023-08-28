@@ -5,6 +5,7 @@ namespace Wallet.Models
 {
 	public class CredentialOfferRequest
 	{
+        public string GrantType { get; set; } = string.Empty;
         public string PreAuthorizedCode { get; set; } = string.Empty;
         public string IssuerURL { get; set; } = string.Empty;
         public string CredentialType { get; set; } = string.Empty;

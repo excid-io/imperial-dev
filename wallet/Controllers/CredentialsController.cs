@@ -14,6 +14,7 @@ using System.Net.Http.Headers;
 using System.Net;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.EntityFrameworkCore;
+using Wallet.Helpers;
 
 namespace Wallet.Controllers
 {
@@ -123,6 +124,7 @@ namespace Wallet.Controllers
         {
             _logger.LogInformation("CredentialOfferRequest" + JsonSerializer.Serialize(request));
             string clientId = string.Empty;
+            FormUrlEncodedContent? tokenRequest = null;
             if (request.AuthType == 1)
             {
                 var did = _context.DidselfDIDs.FirstOrDefault(q => q.Owner == currentUser && q.Id == request.AuthClaimId);
@@ -139,18 +141,47 @@ namespace Wallet.Controllers
                     clientId = certificate.Name;
                 }
             }
-            var tokenRequest= new FormUrlEncodedContent(new[]
-               {
+            if (request.GrantType == "urn:ietf:params:oauth:grant-type:pre-authorized_code")
+            {
+                tokenRequest = new FormUrlEncodedContent(new[]
+                   {
                     new KeyValuePair<string, string>("grant_type", "urn:ietf:params:oauth:grant-type:pre-authorized_code"),
                     new KeyValuePair<string, string>("pre-authorized_code", request.PreAuthorizedCode),
                     new KeyValuePair<string, string>("client_id", clientId),
                 });
-            var tokenResponse = await httpClient.PostAsync(request.IssuerURL + "/token", tokenRequest);
-            string content = await tokenResponse.Content.ReadAsStringAsync();
-           
-            if (content != "")
+            }
+            else if (request.GrantType == "urn:ietf:params:oauth:client-assertion-type:jwt-bearer")
             {
-                _logger.LogInformation("Received token:" + content);
+                string clientAssertion = string.Empty;
+                if (request.AuthType == 2)
+                {
+                    var certificate = _context.Certificate.FirstOrDefault(q => q.Owner == currentUser && q.ID == request.AuthClaimId);
+                    if (certificate != null)
+                    {
+                        clientAssertion = Assertion.JWTBearerAssertion(certificate, clientId, clientId, "EU.EORI.GREXCID001");
+                    }
+                }
+                tokenRequest = new FormUrlEncodedContent(new Dictionary<string, string>
+                {
+                    { "grant_type", "client_credentials" },
+                    { "scope", "Credential" },
+                    { "client_id", clientId },
+                    { "client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer" },
+                    { "client_assertion", clientAssertion }
+                });
+            }
+            if (tokenRequest == null)
+            {
+                _logger.LogWarning("Could not create valid token request");
+                return Redirect(nameof(Index));
+            }
+            _logger.LogInformation("CredentialOfferRequest" + JsonSerializer.Serialize(request));
+            var tokenResponse = await httpClient.PostAsync(request.IssuerURL + "/token", tokenRequest);
+            var content = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
+
+            if (content != null && content.access_token!=null)
+            {
+                _logger.LogInformation("Received token:" + content.access_token);
                 //var proof = CreateJWTProof(did, issuerURL);
                 var credRequest = new CredentialRequest
                 {
@@ -161,7 +192,7 @@ namespace Wallet.Controllers
                         jwt = ""//proof
                     }
                 };
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", content);
+                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", content.access_token);
                 var credResponse = await httpClient.PostAsJsonAsync(request.IssuerURL + "/credential", credRequest);
                 string credential = await credResponse.Content.ReadAsStringAsync();
                 if (credential != "")
@@ -186,7 +217,7 @@ namespace Wallet.Controllers
             }
             return Redirect(nameof(Index));
 
-        }
+         }
 
         public async Task<IActionResult> Offer(String? credential_offer_uri)
         {
@@ -200,10 +231,15 @@ namespace Wallet.Controllers
                 {
                     return NotFound();
                 }
-                _logger.LogInformation("Received:" + credentialOffer.CredentialIssuer);
+                _logger.LogInformation("Received credential offer:" + JsonSerializer.Serialize(credentialOffer));
                 if (credentialOffer.Grants != null && credentialOffer.Grants.PreAuthorizedCode != null)
                 {
+                    credentialOfferRequest.GrantType = "urn:ietf:params:oauth:grant-type:pre-authorized_code";
                     credentialOfferRequest.PreAuthorizedCode = credentialOffer.Grants.PreAuthorizedCode.Code;
+                }
+                if (credentialOffer.Grants != null && credentialOffer.Grants.JWTBarer != null)
+                {
+                    credentialOfferRequest.GrantType = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
                 }
                 credentialOfferRequest.CredentialType = credentialOffer.Credentials.First().Types[1];
                 credentialOfferRequest.IssuerURL = credentialOffer.CredentialIssuer;
@@ -234,7 +270,18 @@ namespace Wallet.Controllers
                 //Add code here to handle error
             }
             //</IMPERIAL Specific code>
-            
+            //<ISHARE Specific code>
+            if (scope == "excid-io.github.io.ishare")
+            {
+                ViewData["Type"] = "iSHAREDelegationCredential";
+                type = "iSHAREDelegationCredential";
+            }
+            else
+            {
+                //Add code here to handle error
+            }
+            //</ISHARE Specific code>
+
             if (request!.client_metadata != null)
             {
                 ClientMetadata? clientMetadata =

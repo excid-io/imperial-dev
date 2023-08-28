@@ -34,6 +34,9 @@ namespace Wallet.Models.Oidc4vci
 
         [JsonPropertyName("urn:ietf:params:oauth:grant-type:pre-authorized_code"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public PreAuthorizedCode? PreAuthorizedCode { get; set; }
+
+        [JsonPropertyName("urn:ietf:params:oauth:client-assertion-type:jwt-bearer"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+        public object? JWTBarer { get; set; }
     }
 
     public class PreAuthorizedCode
