@@ -33,6 +33,7 @@ namespace iam.Controllers
                 var authorization = _context.Authorizations.Where(q=>q.Code== request.pre_authorized_code).FirstOrDefault();
                 if (authorization == null)
                 {
+                    _logger.LogInformation("Token: Authorization was not found");
                     return NotFound();
                 }
                 var token = new Token();

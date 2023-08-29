@@ -23,7 +23,7 @@ namespace iam.Controllers
         public IActionResult Index()
         {
             ViewData["wallet_url"] = _configuration["wallet_url"];
-            ViewData["iss_url"] = _configuration["iss_url"];
+            ViewData["Host"] = _configuration["Host"];
             var authorizations = _context.Authorizations.ToList();
             return View(authorizations);
         }

@@ -28,7 +28,7 @@ namespace iam.Controllers
             }
             CredentialOffer credentialOffer = new CredentialOffer()
             {
-                CredentialIssuer = _configuration["iss_url"] ?? string.Empty,
+                CredentialIssuer = _configuration["Host"] ?? string.Empty,
                 Grants = new Grant()
                 {
                     PreAuthorizedCode = new PreAuthorizedCode()

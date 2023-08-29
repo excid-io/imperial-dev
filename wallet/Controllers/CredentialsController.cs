@@ -207,7 +207,7 @@ namespace Wallet.Controllers
                 string credential = await credResponse.Content.ReadAsStringAsync();
                 if (credential != "")
                 {
-                    _logger.LogInformation("Received credential:" + content);
+                    _logger.LogInformation("Received credential:" + credential);
                     var tokenHandler = new JwtSecurityTokenHandler();
                     var decodedCredential = tokenHandler.ReadJwtToken(credential);
                     var item = new Credential();

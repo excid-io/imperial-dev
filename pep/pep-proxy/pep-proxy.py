@@ -25,10 +25,10 @@ class Handler():
         for key in self.conf['resources']:
             if key == "default": continue
             self.url_map.add(rulefactory=Rule(key, endpoint=key))
-        self.vp_pdp = VPPDP(True)
+        self.vp_pdp = VPPDP(debug=self.conf['vp_pdp_debug'])
         self.token_pdp = TokenPDP()
         self.http_proxy = HTTPProxy()
-        self.openFGAPDP = OpenFGA_PDP(debug=True)
+        self.openFGAPDP = OpenFGA_PDP(debug=self.conf['openfga_pdp_debug'])
 
     def wsgi_app(self, environ, start_response):
         req      = Request(environ)
@@ -63,25 +63,32 @@ class Handler():
                         object = req.path.split('/')[-1]
                         # https://openid.net/specs/openid-4-verifiable-presentations-1_0.html
                         query_parameter = {
-                            'scope' : 'excid-io.github.io.imperial',
+                            'scope' : token_endpoint['scope'],
                             'nonce' : secrets.token_urlsafe(16),
                             'response_type': 'vp_token',
                             'response_mode' : 'direct_post',
-                            'response_uri': 'https://twin.excid.io/authorize',
+                            'response_uri': token_endpoint['response_uri'],
                             'state': secrets.token_urlsafe(16),
                             'client_metadata': json.dumps({
-                                "client_name":object
+                                "client_name":token_endpoint['client_name']
                             })
                         }
                         self.token_pdp.append_authorization_table(query_parameter['state'], {})
                         code = 301
-                        output_header['Location'] = "https://comp-wallet.excid.io/Credentials/Authorize?" + urlencode(query_parameter)
+                        output_header['Location'] = token_endpoint['wallet_auth_url']+ "?" + urlencode(query_parameter)
                 elif(auth_type == "Bearer"):
-                    object = req.path.split('/')[-1]
-                    is_client_authorized, info = self.token_pdp.get_info(auth_grant)
-                    if is_client_authorized:
-                        is_client_authorized, ver_output= self.openFGAPDP.check(info['user'], "access","resource:"+object, info['relations'])
-                       
+                    token_exists, token_info = self.token_pdp.get_info(auth_grant)
+                    if token_exists == False or not "claim" in token_info:
+                        is_client_authorized, ver_output = False, ""
+                    else:
+                        object = req.path.split('/')[-1]
+                        is_client_authorized, ver_output= self.openFGAPDP.check(token_info['user'], "access","resource:"+object, token_info['claim']['relations'])
+                        if is_client_authorized==True:
+                            for status in token_info['claim']['status']:
+                                credentialStatus = self.vp_pdp.check_status_from_issuer(status['statusListCredential'], int(status['statusListIndex']))
+                                if credentialStatus == False:
+                                    is_client_authorized, ver_output = False, "A VC has been revoked"
+                                    break  
                     #is_client_authorized, ver_output = self.token_pdp.decide(auth_grant, object)
 
             #*********VP***********
@@ -103,12 +110,19 @@ class Handler():
                     vcs = ver_output["vcs"]
                     if state not in self.token_pdp.authorization_table:
                         self.token_pdp.append_authorization_table(state, {})
-                    self.token_pdp.authorization_table[state]['relations']=[]
+                    self.token_pdp.authorization_table[state]['claim'] ={}    
+                    self.token_pdp.authorization_table[state]['claim']['relations']=[]
+                    self.token_pdp.authorization_table[state]['claim']['status']=[]
                     firstVC = True
                     for vc in vcs:
                         user = vc['vc']['credentialSubject']['id'].split(":")[-1]
                         relationships = vc['vc']['credentialSubject']['relationships']
-                        
+                        if 'credentialStatus' in vc['vc']:
+                            credentialStatus = vc['vc']['credentialStatus']
+                            self.token_pdp.authorization_table[state]['claim']['status'].append({
+                                'statusListCredential':credentialStatus['statusListCredential'],
+                                'statusListIndex':int(credentialStatus['statusListIndex'])
+                                })
                         for relation in relationships:
                             key = list(relation.keys())[0]
                             value = relation[key]
@@ -118,7 +132,7 @@ class Handler():
                                 relationship.append("employee:"+user)
                                 relationship.append(value)
                                 relationship.append("company:"+company)
-                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                self.token_pdp.authorization_table[state]['claim']['relations'].append(relationship)
                                 if firstVC:
                                      # The first VC includes the user
                                     self.token_pdp.authorization_table[state]['user']= "employee:"+user
@@ -127,19 +141,18 @@ class Handler():
                                 relationship.append("company:"+user+"#authorized")
                                 relationship.append(value)
                                 relationship.append("resource:"+key)
-                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                self.token_pdp.authorization_table[state]['claim']['relations'].append(relationship)
                                 relationship = []
                                 relationship.append("company:"+user)
                                 relationship.append(value)
                                 relationship.append("resource:"+key)
-                                self.token_pdp.authorization_table[state]['relations'].append(relationship)
+                                self.token_pdp.authorization_table[state]['claim']['relations'].append(relationship)
                                 if firstVC:
                                      # The first VC includes the user
                                     self.token_pdp.authorization_table[state]['user']= "company:"+user
                             firstVC= False
                     #self.token_pdp.authorization_table[ver_output["state"]]={"user":ver_output["user"], "relations":ver_output["relations"]}
                     print(self.token_pdp.authorization_table)
-                    print("authorized for state",state, "with vcs:", vcs) 
 
             elif('authorization' not in resource):
                 is_client_authorized = True

@@ -42,7 +42,8 @@ namespace iam.Controllers
                     var authorization = _context.Authorizations.FirstOrDefault(q=>q.Id== auth_id);
                     if (authorization != null)
                     {
-                        authorization.IssuerURL = _configuration["jwt_vc_iss"] ?? "";
+                        authorization.Issuer = _configuration["Issuer"] ?? "";
+                        authorization.Host = _configuration["Host"] ?? "";
                         authorization.SubjectId = did;
                         var credential = authorization.Credential;
                         string vc = JWTSignedCredential(credential);

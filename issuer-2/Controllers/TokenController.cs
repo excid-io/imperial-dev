@@ -33,6 +33,7 @@ namespace iam.Controllers
                 var authorization = _context.Authorizations.Where(q=>q.Code== request.pre_authorized_code).FirstOrDefault();
                 if (authorization == null)
                 {
+                    _logger.LogInformation("Token: Authorization was not found");
                     return NotFound();
                 }
                 var token = new Token();
@@ -41,7 +42,7 @@ namespace iam.Controllers
                 token.clientId = request.client_id;
                 _logger.LogInformation("Token:" + JsonSerializer.Serialize(token));
                 TempContext.Tokens.Add(token);
-                return Ok(token.Id);
+                return Json(new { access_token = token.Id, token_type = "Bearer", expires_in = 3600 });
 
             }
 

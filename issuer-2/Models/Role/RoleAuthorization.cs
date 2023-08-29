@@ -42,7 +42,10 @@ namespace iam.Models.Role
         };
 
         [NotMapped]
-        public string IssuerURL { get; set; } = string.Empty;
+        public string Issuer { get; set; } = string.Empty;
+
+        [NotMapped]
+        public string Host { get; set; } = string.Empty;
 
         [NotMapped]
         public string SubjectId { get; set; } = string.Empty;
@@ -54,7 +57,7 @@ namespace iam.Models.Role
             {
                 var iat = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
                 var exp = DateTimeOffset.UtcNow.AddDays(15).ToUnixTimeSeconds();
-                var iss = IssuerURL;
+                var iss = Issuer;
                 string jti = RandomString;
 
 
@@ -72,7 +75,7 @@ namespace iam.Models.Role
                         {
                             {"type", "RevocationList2021Status" },
                             { "statusListIndex", Id},
-                            {"statusListCredential", "http://localhost:8001/credential/status" }
+                            {"statusListCredential", Host+"/credential/status"}
                         }
                     }
 

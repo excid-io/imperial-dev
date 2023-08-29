@@ -24,7 +24,7 @@ namespace iam.Controllers
         public IActionResult Index()
         {
             ViewData["wallet_url"] = _configuration["wallet_url"];
-            ViewData["iss_url"] = _configuration["iss_url"];
+            ViewData["Host"] = _configuration["Host"];
             var authorizations = _context.Authorizations.ToList();
             return View(authorizations);
         }
@@ -41,8 +41,7 @@ namespace iam.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Name", "AuthType", "AvailableRoles")] Models.Role.Authorization authorization)
         {
-            string companyId = _configuration["jwt_vc_iss"]!;
-            companyId = companyId.Substring(8);
+            string companyId = _configuration["Issuer"]!;
             List<Dictionary<string, string>> roles = new ();
             foreach (var role in authorization.AvailableRoles)
             {
