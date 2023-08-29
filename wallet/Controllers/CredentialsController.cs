@@ -15,6 +15,7 @@ using System.Net;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.EntityFrameworkCore;
 using Wallet.Helpers;
+using System.Linq.Expressions;
 
 namespace Wallet.Controllers
 {
@@ -177,8 +178,17 @@ namespace Wallet.Controllers
             }
             _logger.LogInformation("CredentialOfferRequest" + JsonSerializer.Serialize(request));
             var tokenResponse = await httpClient.PostAsync(request.IssuerURL + "/token", tokenRequest);
-            var content = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
-
+            TokenResponse? content;
+            try
+            {
+                content = await tokenResponse.Content.ReadFromJsonAsync<TokenResponse>();
+            }
+            catch(Exception ex)
+            {
+                _logger.LogWarning("Did not receive token");
+                return Redirect(nameof(Index));
+            }
+    
             if (content != null && content.access_token!=null)
             {
                 _logger.LogInformation("Received token:" + content.access_token);
