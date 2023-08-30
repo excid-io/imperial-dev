@@ -2,6 +2,7 @@ import json
 import time
 from jwcrypto import jwt, jwk
 from jwcrypto.common import base64url_decode, base64url_encode
+import base64
 
 
 class Issuer:
@@ -188,11 +189,19 @@ class Issuer:
             }
             vc = jwt.JWT(header=jwt_header, claims=jwt_claims)
             vc.make_signed_token(key)
-            return vc.serialize()     
+            return vc.serialize()
+    
+    def issue_subject_keys(self):
+        import hmac
+        import hashlib
+        import secrets
+        key = base64url_decode('4XsWWgfADFS_daMpZSTpiJMTXNORRKqC9CgsuUsNggE')
+        keyid = secrets.token_bytes(32)
+        secret = hmac.digest( key, keyid, hashlib.sha256 )
+        return  base64url_encode(keyid), base64url_encode(secret)
 
 if __name__ == '__main__':
-    key_dict = {'kty': 'EC', 'crv': 'P-256', 'x': 'z30WuxpsPow8KpH0N93vW24nA0HD48_MluqgdEUvtU4', 'y': 'VcKco12BZFPu5HU2LBLotTD9NitdlNxnBLngD-eTapM', 'd': 'UCe_iiyGTQf13KyLPhLgjVCT3gSx4APgNSbS7uyLxN8'}
-    key = jwk.JWK.from_json(json.dumps(key_dict))
     issuer = Issuer()
-    print (issuer.issue_valid_vc_hmac("did:self:" + key.thumbprint()))
+    kid, secret = issuer.issue_subject_keys()
+    print(kid, secret)
 
