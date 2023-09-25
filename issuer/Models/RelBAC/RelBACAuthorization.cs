@@ -36,8 +36,8 @@ namespace iam.Models.RelBAC
         [NotMapped]
         public static readonly List<SelectListItem> AuthTypes = new List<SelectListItem>()
         {
-            new SelectListItem {Text = "None", Value = "0"},
-            new SelectListItem {Text = "Decentralized Identifier", Value = "1", Selected=true},
+            new SelectListItem {Text = "None", Value = "0", Selected=true},
+            new SelectListItem {Text = "Decentralized Identifier", Value = "1" },
             new SelectListItem {Text = "X509 Certificate", Value = "2"},
         };
 

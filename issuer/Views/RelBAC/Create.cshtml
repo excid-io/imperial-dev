@@ -26,11 +26,11 @@
             </div>
             <div class="form-group mb-3">
                 <label asp-for="AuthType" class="control-label mb-1"></label>
-                <select asp-for="AuthType" asp-items="@Authorization.AuthTypes" class="form-select">
+                <select asp-for="AuthType" asp-items="@Authorization.AuthTypes" class="form-select" onchange="toggleAuthClaimDiv()">
                 </select>
                 <span asp-validation-for="AuthType" class="text-danger"></span>
             </div>
-            <div class="form-group mb-3">
+            <div class="form-group mb-3" style="display:none" id="AuthClaimDiv">
                 <label asp-for="AuthClaim" class="control-label mb-1">Client DID</label>
                 <input asp-for="AuthClaim" class="form-control" />
                 <span asp-validation-for="AuthClaim" class="text-danger"></span>
@@ -115,6 +115,10 @@
                 step1.style.display = "none";
                 step2.style.display = "block";
             }
+        }
+        function toggleAuthClaimDiv() {
+            var authClaimDiv = document.getElementById("AuthClaimDiv");
+            authClaimDiv.style.display = "block";
         }
     </script>
 }
